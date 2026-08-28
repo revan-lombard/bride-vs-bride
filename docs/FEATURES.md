@@ -18,6 +18,22 @@ What's built, what's worth adding, and what would take the show to the next leve
 
 ---
 
+## 📋 Committed next: pre-event Feud survey (multiple choice)
+
+The real Family Feud trick: survey the invitees *before* the event, then the boards are "we asked the kitchen tea guests…" with genuine data. Decided design:
+
+- **Multiple choice, not free text.** With a small group, free-text answers scatter too widely to make good boards ("morning breath" vs "bad breath" vs "her breath"). Each question ships with 4–6 fixed options (questions and options written by Revan in `src/lib/surveyQuestions.js`). This also means tallying is fully automatic — zero manual answer-grouping.
+- **Standalone route `/#/survey`** — the URL sent with the invites. Themed like the game ("💍 Bride vs. Bride — help us build the game!") so it doubles as a teaser. Deliberately separate from the game views; invitees never see a link that's one hash-edit from `/#/host`.
+- **One response set per device** — respondent id in localStorage (same pattern as the game's player identity); answers can be changed until submitted. Optional name field so we know who responded.
+- **Data at a separate `/survey` root** in the same Firebase project (`/survey/responses/{respondentId} = { name, answers: { [questionId]: choice } }`), so game resets never touch survey data. Other respondents' answers are never shown — no bandwagon bias.
+- **Host tally view `/#/survey-results`** — live counts per option per question, plus a **"Use as Feud round"** button that converts vote counts straight into a game board (points = votes, or normalised to 100). The survey literally builds the game content.
+- **Open/close toggle** so late submissions can't change boards after they're locked in.
+- Bonus: the survey is a soft load-test of Firebase with real guests' phones before the event.
+
+*Alternative considered: Google Form. Rejected — needs manual transcription into the game, breaks the theme, and multiple-choice tallying is what the app is already good at.*
+
+---
+
 ## 🎯 High value, low effort
 
 1. **Pre-loaded question banks** — hard-code the actual Feud rounds, poll questions and lyric snippets for the event in a `rounds.js` file, so the host taps "Next round" instead of pasting text under pressure. *This is the single biggest day-of quality improvement.*
@@ -70,8 +86,9 @@ What's built, what's worth adding, and what would take the show to the next leve
 
 ### Suggested build order for the actual event
 
-1. Pre-loaded question banks (#1) + real names/theme (#14)
-2. Lyric game content (#2) + Feud award button (#3)
-3. Countdown timer (#5) + winner screen (#6)
-4. Host PIN (#19) + rehearsal mode (#22)
-5. Then polish from the lists above as time allows.
+1. **Pre-event survey** (section above) — build first: it needs to go out with the invites, well before the event, and its results feed everything else.
+2. Pre-loaded question banks (#1) + real names/theme (#14) — Feud rounds come straight from survey results via "Use as Feud round".
+3. Lyric game content (#2) + Feud award button (#3)
+4. Countdown timer (#5) + winner screen (#6)
+5. Host PIN (#19) + rehearsal mode (#22)
+6. Then polish from the lists above as time allows.
