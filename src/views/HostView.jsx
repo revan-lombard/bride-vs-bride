@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { GAMES, TEAMS, MAX_STRIKES } from '../lib/schema'
+import { GAMES, TEAMS, MAX_STRIKES, BUZZER_GAMES } from '../lib/schema'
 import { THEME } from '../lib/theme'
-import { FEUD_ROUNDS, POLL_PRESETS, LYRIC_ROUNDS } from '../lib/rounds'
+import { FEUD_ROUNDS, POLL_PRESETS, LYRIC_ROUNDS, NOOT_ROUNDS } from '../lib/rounds'
 import {
   setCurrentGame,
   adjustScore,
@@ -17,6 +17,9 @@ import {
   loadLyric,
   showLyricAnswer,
   triggerLyricPlayback,
+  loadNootRound,
+  triggerNootPlayback,
+  revealNootAnswer,
   triggerSound,
   resetGame,
 } from '../lib/gameActions'
@@ -40,12 +43,12 @@ export default function HostView({ state, connected }) {
       </header>
 
       <Section title="Game">
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-5 gap-2">
           {Object.values(GAMES).map((g) => (
             <button
               key={g}
               onClick={() => setCurrentGame(g)}
-              className={`rounded-lg py-3 text-sm font-bold ${
+              className={`rounded-lg py-3 text-xs font-bold ${
                 state.currentGame === g ? 'bg-white text-stage' : 'bg-white/15'
               }`}
             >
@@ -82,9 +85,11 @@ export default function HostView({ state, connected }) {
         </div>
       </Section>
 
-      <Section title="Buzzers">
-        <BuzzerControls buzzerState={state.buzzerState} />
-      </Section>
+      {BUZZER_GAMES.includes(state.currentGame) && (
+        <Section title="Buzzers">
+          <BuzzerControls buzzerState={state.buzzerState} />
+        </Section>
+      )}
 
       {state.currentGame === GAMES.POLL && (
         <Section title="Poll">
@@ -101,6 +106,12 @@ export default function HostView({ state, connected }) {
       {state.currentGame === GAMES.LYRIC && (
         <Section title="Finish the Lyric">
           <LyricControls lyricState={state.lyricState} />
+        </Section>
+      )}
+
+      {state.currentGame === GAMES.NOOT && (
+        <Section title="Noot vir Noot">
+          <NootControls nootState={state.nootState} />
         </Section>
       )}
 
@@ -124,19 +135,23 @@ export default function HostView({ state, connected }) {
         </div>
       </Section>
 
-      <Section title="Guest link">
-        <div className="flex items-center gap-4 bg-white rounded-xl p-3">
-          <QRCodeSVG value={guestUrl} size={96} />
-          <code className="text-stage text-xs break-all">{guestUrl}</code>
+      <details className="group">
+        <summary className="text-xs uppercase tracking-widest text-white/50 cursor-pointer list-none">
+          ⚙️ Setup &amp; guest link <span className="group-open:hidden">▸</span><span className="hidden group-open:inline">▾</span>
+        </summary>
+        <div className="space-y-3 pt-2">
+          <div className="flex items-center gap-4 bg-white rounded-xl p-3">
+            <QRCodeSVG value={guestUrl} size={96} />
+            <code className="text-stage text-xs break-all">{guestUrl}</code>
+          </div>
+          <button
+            onClick={() => confirm('Reset ALL scores and game state?') && resetGame()}
+            className="w-full rounded-lg bg-red-900/60 py-3 text-sm font-bold"
+          >
+            ⚠️ Reset everything
+          </button>
         </div>
-      </Section>
-
-      <button
-        onClick={() => confirm('Reset ALL scores and game state?') && resetGame()}
-        className="w-full rounded-lg bg-red-900/60 py-3 text-sm font-bold"
-      >
-        ⚠️ Reset everything
-      </button>
+      </details>
     </div>
   )
 }
@@ -193,41 +208,40 @@ function PollControls({ pollState }) {
       <ContentBank
         items={POLL_PRESETS}
         label={(p) => p.question}
-        onPick={(p) => {
-          setQuestion(p.question)
-          setOptionsText(p.options.join('\n'))
-        }}
+        onPick={(p) => openPoll(p.question, p.options)}
       />
-      <input
-        className="w-full rounded-lg bg-white/10 px-3 py-2"
-        placeholder="Poll question"
-        value={question}
-        onChange={(e) => setQuestion(e.target.value)}
-      />
-      <textarea
-        className="w-full rounded-lg bg-white/10 px-3 py-2 text-sm"
-        rows={3}
-        placeholder="One option per line"
-        value={optionsText}
-        onChange={(e) => setOptionsText(e.target.value)}
-      />
-      <div className="flex gap-2">
+      <ManualEntry>
+        <input
+          className="w-full rounded-lg bg-white/10 px-3 py-2"
+          placeholder="Poll question"
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+        />
+        <textarea
+          className="w-full rounded-lg bg-white/10 px-3 py-2 text-sm"
+          rows={3}
+          placeholder="One option per line"
+          value={optionsText}
+          onChange={(e) => setOptionsText(e.target.value)}
+        />
         <button
           onClick={() =>
             openPoll(question, optionsText.split('\n').map((s) => s.trim()).filter(Boolean))
           }
-          className="flex-1 rounded-lg bg-green-700 py-2 font-bold"
+          className="w-full rounded-lg bg-green-700 py-2 font-bold"
         >
           Open poll
         </button>
+      </ManualEntry>
+      <div className="flex gap-2">
         <button onClick={closePoll} className="flex-1 rounded-lg bg-white/15 py-2">
-          Close
+          Close voting
         </button>
         <button
           onClick={() => showPollResults(!pollState?.showResults)}
-          className="flex-1 rounded-lg bg-white/15 py-2"
+          className="flex-1 rounded-lg bg-green-700 py-2 font-bold"
         >
-          {pollState?.showResults ? 'Hide results' : 'Show results'}
+          {pollState?.showResults ? 'Hide results' : '📊 Show results'}
         </button>
       </div>
       <p className="text-xs text-white/50 text-center">
@@ -252,10 +266,6 @@ function FeudControls({ feudState }) {
     loadFeudRound(q, parsed)
   }
 
-  const revealedPoints = answers
-    .filter((a) => a.revealed)
-    .reduce((sum, a) => sum + (a.points || 0), 0)
-
   return (
     <div className="space-y-2">
       <ContentBank
@@ -265,17 +275,20 @@ function FeudControls({ feudState }) {
       />
       <p className="text-xs text-white/40">
         Survey boards load from the <a href="#/survey-results" className="underline">survey results</a> page.
+        Correct picks score automatically.
       </p>
-      <textarea
-        className="w-full rounded-lg bg-white/10 px-3 py-2 text-sm font-mono"
-        rows={5}
-        placeholder={'Question on first line\nTop answer | 40\nSecond answer | 25'}
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-      />
-      <button onClick={loadRound} className="w-full rounded-lg bg-green-700 py-2 font-bold">
-        Load round
-      </button>
+      <ManualEntry>
+        <textarea
+          className="w-full rounded-lg bg-white/10 px-3 py-2 text-sm font-mono"
+          rows={5}
+          placeholder={'Question on first line\nTop answer | 40\nSecond answer | 25'}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+        />
+        <button onClick={loadRound} className="w-full rounded-lg bg-green-700 py-2 font-bold">
+          Load round
+        </button>
+      </ManualEntry>
 
       {feudState?.question && (
         <div className="space-y-1">
@@ -319,20 +332,6 @@ function FeudControls({ feudState }) {
               </button>
             ))}
           </div>
-          <div className="grid grid-cols-2 gap-2 pt-1">
-            {Object.values(TEAMS).map((t) => (
-              <button
-                key={t.id}
-                onClick={() => adjustScore(t.id, revealedPoints)}
-                disabled={revealedPoints === 0}
-                className={`rounded-lg py-2 text-sm font-bold disabled:opacity-30 ${
-                  t.id === 'teamA' ? 'bg-bride-a-dark' : 'bg-bride-b-dark'
-                }`}
-              >
-                🏆 +{revealedPoints} → {t.label}
-              </button>
-            ))}
-          </div>
         </div>
       )}
     </div>
@@ -350,24 +349,26 @@ function LyricControls({ lyricState }) {
         label={(l) => `${l.audio ? '🎵 ' : ''}${l.song || l.snippet}`}
         onPick={(l) => loadLyric(l.snippet, l.answer, l.audio || '', l.cutAt || 0)}
       />
-      <input
-        className="w-full rounded-lg bg-white/10 px-3 py-2 text-sm"
-        placeholder="Lyric shown on the TV (stop where they must finish it…)"
-        value={snippet}
-        onChange={(e) => setSnippet(e.target.value)}
-      />
-      <input
-        className="w-full rounded-lg bg-white/10 px-3 py-2 text-sm"
-        placeholder="The missing words (revealed by you)"
-        value={answer}
-        onChange={(e) => setAnswer(e.target.value)}
-      />
-      <button
-        onClick={() => snippet.trim() && loadLyric(snippet.trim(), answer.trim())}
-        className="w-full rounded-lg bg-green-700 py-2 font-bold"
-      >
-        Show on TV
-      </button>
+      <ManualEntry>
+        <input
+          className="w-full rounded-lg bg-white/10 px-3 py-2 text-sm"
+          placeholder="Lyric shown on the TV (stop where they must finish it…)"
+          value={snippet}
+          onChange={(e) => setSnippet(e.target.value)}
+        />
+        <input
+          className="w-full rounded-lg bg-white/10 px-3 py-2 text-sm"
+          placeholder="The missing words (revealed by you)"
+          value={answer}
+          onChange={(e) => setAnswer(e.target.value)}
+        />
+        <button
+          onClick={() => snippet.trim() && loadLyric(snippet.trim(), answer.trim())}
+          className="w-full rounded-lg bg-green-700 py-2 font-bold"
+        >
+          Show on TV
+        </button>
+      </ManualEntry>
 
       {lyricState?.snippet && (
         <div className="bg-white/10 rounded-lg p-3 space-y-2 text-sm">
@@ -402,6 +403,76 @@ function LyricControls({ lyricState }) {
         </div>
       )}
     </div>
+  )
+}
+
+function NootControls({ nootState }) {
+  const loaded = (nootState?.options || []).length > 0
+  return (
+    <div className="space-y-2">
+      <ContentBank
+        items={NOOT_ROUNDS}
+        label={(r) => `${r.audio ? '🎵 ' : ''}${r.song}`}
+        onPick={(r) => loadNootRound(r)}
+      />
+      <p className="text-xs text-white/40">
+        Play the clip, arm the buzzers — the winner picks the song on their phone.
+        Correct picks score {nootState?.points || 10} points automatically.
+      </p>
+
+      {loaded && (
+        <div className="bg-white/10 rounded-lg p-3 space-y-2 text-sm">
+          <p>
+            Answer: <b className={nootState.revealed ? 'text-green-400' : ''}>{nootState.correct}</b>
+          </p>
+          {nootState.lastGuess && (
+            <div
+              className={`rounded-lg p-2 text-center ${
+                nootState.lastGuess.correct ? 'bg-green-800' : 'bg-red-900/70'
+              }`}
+            >
+              <b>{nootState.lastGuess.userName}</b> ({TEAMS[nootState.lastGuess.team]?.label}) picked
+              “{nootState.lastGuess.choice}” —{' '}
+              {nootState.lastGuess.correct ? `✅ +${nootState.points} points!` : '❌ wrong'}
+            </div>
+          )}
+          {nootState.audio && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => triggerNootPlayback('play')}
+                className="flex-1 rounded-lg bg-green-700 py-2 font-bold"
+              >
+                ▶️ Play clip on TV
+              </button>
+              <button
+                onClick={() => triggerNootPlayback('stop')}
+                className="flex-1 rounded-lg bg-white/15 py-2 font-bold"
+              >
+                ⏹ Stop
+              </button>
+            </div>
+          )}
+          <button
+            onClick={() => revealNootAnswer(!nootState.revealed)}
+            className={`w-full rounded-lg py-2 font-bold ${
+              nootState.revealed ? 'bg-white/15' : 'bg-green-700'
+            }`}
+          >
+            {nootState.revealed ? 'Hide answer' : '✨ Reveal answer'}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** Collapsible wrapper for type-it-yourself controls — keeps the panel clean. */
+function ManualEntry({ children }) {
+  return (
+    <details>
+      <summary className="text-xs text-white/40 cursor-pointer">✍️ Manual entry</summary>
+      <div className="space-y-2 pt-2">{children}</div>
+    </details>
   )
 }
 

@@ -28,14 +28,14 @@ export default function DisplayView({ state }) {
           <LyricScreen
             lyricState={state.lyricState}
             audioFiles={audioFiles}
-            onLoadFiles={(files) =>
-              setAudioFiles((prev) => ({
-                ...prev,
-                ...Object.fromEntries(
-                  [...files].map((f) => [f.name, URL.createObjectURL(f)])
-                ),
-              }))
-            }
+            onLoadFiles={(files) => setAudioFiles((prev) => ({ ...prev, ...toUrlMap(files) }))}
+          />
+        )}
+        {state.currentGame === GAMES.NOOT && (
+          <NootScreen
+            nootState={state.nootState}
+            audioFiles={audioFiles}
+            onLoadFiles={(files) => setAudioFiles((prev) => ({ ...prev, ...toUrlMap(files) }))}
           />
         )}
 
@@ -44,6 +44,9 @@ export default function DisplayView({ state }) {
     </div>
   )
 }
+
+const toUrlMap = (files) =>
+  Object.fromEntries([...files].map((f) => [f.name, URL.createObjectURL(f)]))
 
 /** Plays a synth cue whenever the host fires one (needs one click to unlock audio). */
 function useSoundCues(soundCue) {
@@ -243,6 +246,108 @@ function LyricScreen({ lyricState, audioFiles, onLoadFiles }) {
               if (cutAt > 0 && e.target.currentTime >= cutAt) setVocalsCut(true)
             }}
             onEnded={() => setVocalsCut(true)}
+          />
+          {!audioUrl && (
+            <label className="inline-block bg-white/10 rounded-xl px-4 py-3 text-lg cursor-pointer">
+              📂 Click to load the music folder (looking for <b>{audio}</b>)
+              <input
+                type="file"
+                accept="audio/*"
+                multiple
+                className="hidden"
+                onChange={(e) => onLoadFiles(e.target.files)}
+              />
+            </label>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+function NootScreen({ nootState, audioFiles, onLoadFiles }) {
+  const {
+    prompt, options = [], correct, revealed, wrongGuesses = [],
+    audio, clipStart, clipEnd, playback, lastGuess, points,
+  } = nootState || {}
+  const audioRef = useRef(null)
+  const lastPlayTs = useRef(null)
+  const [playing, setPlaying] = useState(false)
+
+  const audioUrl = audio ? audioFiles[audio] : null
+
+  // One-shot play/stop cue from the host (skip the cue already in state on load).
+  useEffect(() => {
+    if (!playback?.ts || playback.ts === lastPlayTs.current) return
+    const isInitial = lastPlayTs.current === null
+    lastPlayTs.current = playback.ts
+    if (isInitial) return
+    const el = audioRef.current
+    if (!el) return
+    if (playback.action === 'play') {
+      el.currentTime = clipStart || 0
+      el.play().catch(() => {})
+    } else {
+      el.pause()
+    }
+  }, [playback, clipStart])
+
+  if (!options.length) {
+    return (
+      <div className="text-center space-y-4">
+        <h2 className="text-6xl font-extrabold">🎶 Noot vir Noot</h2>
+        <p className="text-2xl text-white/70">Luister mooi…</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="w-full max-w-5xl text-center space-y-8">
+      <h2 className="text-3xl font-bold text-white/60">🎶 Noot vir Noot</h2>
+      {playing ? (
+        <p className="text-5xl font-extrabold animate-buzz-pulse">🎵 Luister… 🎵</p>
+      ) : (
+        <p className="text-4xl font-extrabold">{prompt}</p>
+      )}
+
+      <div className="grid grid-cols-2 gap-4">
+        {options.map((option) => {
+          const isWrong = wrongGuesses.includes(option)
+          const isCorrectRevealed = revealed && option === correct
+          return (
+            <div
+              key={option}
+              className={`rounded-xl px-6 py-5 text-2xl font-bold ${
+                isCorrectRevealed
+                  ? 'bg-green-700 ring-4 ring-green-400 animate-card-reveal'
+                  : isWrong
+                    ? 'bg-white/5 text-white/25 line-through'
+                    : 'bg-white/10'
+              }`}
+            >
+              {option}
+            </div>
+          )
+        })}
+      </div>
+
+      {revealed && lastGuess?.correct && (
+        <p className="text-3xl font-bold text-green-400 animate-card-reveal">
+          🏆 {lastGuess.userName} kry {points} punte vir {TEAMS[lastGuess.team]?.label}!
+        </p>
+      )}
+
+      {audio && (
+        <>
+          <audio
+            ref={audioRef}
+            src={audioUrl || undefined}
+            onPlay={() => setPlaying(true)}
+            onPause={() => setPlaying(false)}
+            onEnded={() => setPlaying(false)}
+            onTimeUpdate={(e) => {
+              if (clipEnd > 0 && e.target.currentTime >= clipEnd) e.target.pause()
+            }}
           />
           {!audioUrl && (
             <label className="inline-block bg-white/10 rounded-xl px-4 py-3 text-lg cursor-pointer">

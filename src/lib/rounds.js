@@ -152,3 +152,74 @@ export const LYRIC_ROUNDS = [
     answer: 'PASTE: the title line',
   },
 ]
+
+/**
+ * 🎶 Noot vir Noot — guess-the-song rounds. A clip plays on the TV, the
+ * buzz winner picks the title on their phone; a hit auto-awards `points`,
+ * a miss greys that option out for the next buzzer. Options are shuffled
+ * on load, so listing the correct one first here is fine.
+ *
+ * Audio uses the same local-folder loader as the karaoke rounds — drop the
+ * mp3s in the music folder on the display laptop and set `audio` to the
+ * filename, with clipStart/clipEnd in seconds (clipEnd 0 = play until the
+ * host stops it). No audio prep script needed — original tracks work as-is.
+ * ✏️ Swap in your own songs/decoys; double-check titles and artists.
+ */
+export const NOOT_ROUNDS = [
+  {
+    song: 'Loslappie — Kurt Darren',
+    correct: 'Loslappie — Kurt Darren',
+    options: [
+      'Loslappie — Kurt Darren',
+      'Kaptein — Kurt Darren',
+      'Sê Net Ja — Kurt Darren',
+      'Hasie — Kurt Darren',
+    ],
+    audio: '', // e.g. 'loslappie.mp3'
+    clipStart: 0,
+    clipEnd: 0,
+    points: 10,
+  },
+  {
+    song: 'De La Rey — Bok van Blerk',
+    correct: 'De La Rey — Bok van Blerk',
+    options: [
+      'De La Rey — Bok van Blerk',
+      'Afrikanerhart — Bok van Blerk',
+      'Kaplyn — Bok van Blerk',
+      'Tyd om te Trek — Bok van Blerk',
+    ],
+    audio: '',
+    clipStart: 0,
+    clipEnd: 0,
+    points: 10,
+  },
+  {
+    song: 'Lisa se Klavier — Koos Kombuis',
+    correct: 'Lisa se Klavier — Koos Kombuis',
+    options: [
+      'Lisa se Klavier — Koos Kombuis',
+      'Kinders van die Wind — Koos du Plessis',
+      'Blou — Valiant Swart',
+      'Sonvanger — Valiant Swart',
+    ],
+    audio: '',
+    clipStart: 0,
+    clipEnd: 0,
+    points: 10,
+  },
+  {
+    song: 'Pampoen — Steve Hofmeyr',
+    correct: 'Pampoen — Steve Hofmeyr',
+    options: [
+      'Pampoen — Steve Hofmeyr',
+      'Agter Elke Man — Steve Hofmeyr',
+      'Toeka — Steve Hofmeyr',
+      'Windpomp — ander een',
+    ],
+    audio: '',
+    clipStart: 0,
+    clipEnd: 0,
+    points: 10,
+  },
+]

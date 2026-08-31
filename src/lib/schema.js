@@ -10,7 +10,11 @@ export const GAMES = {
   FEUD: 'FEUD',
   POLL: 'POLL',
   LYRIC: 'LYRIC',
+  NOOT: 'NOOT',
 }
+
+/** Which games use the buzzers (drives the host panel's buzzer section). */
+export const BUZZER_GAMES = [GAMES.FEUD, GAMES.LYRIC, GAMES.NOOT]
 
 export const TEAMS = {
   teamA: { id: 'teamA', label: `Team ${THEME.brideA}`, color: 'bride-a' },
@@ -63,6 +67,21 @@ export const DEFAULT_STATE = {
     cutAt: 0,
     // One-shot play/stop cue, same pattern as soundCue. { action, ts }
     playback: null,
+  },
+  // Noot vir Noot: guess-the-song round. Audio clip plays on the TV,
+  // buzz winner picks the title on their phone, auto-scored.
+  nootState: {
+    prompt: '',
+    options: [],
+    correct: '',
+    audio: '',
+    clipStart: 0,
+    clipEnd: 0,
+    points: 10,
+    revealed: false,
+    wrongGuesses: [],
+    playback: null,
+    lastGuess: null,
   },
   // Host-triggered one-shot audio cue. Display view plays it when the
   // timestamp changes. { name: 'buzz'|'correct'|'strike'|'fanfare', ts }

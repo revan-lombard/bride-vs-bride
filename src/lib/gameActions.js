@@ -4,6 +4,7 @@ import {
   update,
   runTransaction,
   serverTimestamp,
+  increment,
 } from 'firebase/database'
 import { db } from './firebase'
 import { DEFAULT_STATE } from './schema'
@@ -111,9 +112,9 @@ export const castVote = (player, choice) =>
 /**
  * The buzz winner picks an answer on their phone. Auto-matched against the
  * board (options come from the same fixed list, so text match is exact):
- * a hit reveals the answer + plays the ding, a miss adds a strike. Buzzers
- * lock until the host re-arms; a revealed answer picked again counts as a
- * miss, Feud style.
+ * a hit reveals the answer, plays the ding and adds its points straight to
+ * the guesser's team; a miss adds a strike. Buzzers lock until the host
+ * re-arms; a revealed answer picked again counts as a miss, Feud style.
  */
 export function submitFeudGuess(player, choice, feudState) {
   const idx = (feudState.answers || []).findIndex(
@@ -132,8 +133,65 @@ export function submitFeudGuess(player, choice, feudState) {
   }
   if (correct) {
     updates[`feudState/answers/${idx}/revealed`] = true
+    updates[`scores/${player.team}`] = increment(
+      feudState.answers[idx].points || 0
+    )
   } else {
     updates['feudState/strikes'] = Math.min((feudState.strikes || 0) + 1, 3)
+  }
+  return update(game(), updates)
+}
+
+/* ------------------------------------------------------------------ */
+/* Noot vir Noot                                                       */
+/* ------------------------------------------------------------------ */
+
+export const loadNootRound = (round) =>
+  set(game('nootState'), {
+    prompt: round.prompt || 'Raai die liedjie! 🎶',
+    options: shuffle(round.options),
+    correct: round.correct,
+    audio: round.audio || '',
+    clipStart: round.clipStart || 0,
+    clipEnd: round.clipEnd || 0,
+    points: round.points || 10,
+    revealed: false,
+    wrongGuesses: [],
+    playback: null,
+    lastGuess: null,
+  })
+
+export const triggerNootPlayback = (action) =>
+  set(game('nootState/playback'), { action, ts: serverTimestamp() })
+
+export const revealNootAnswer = (revealed = true) =>
+  set(game('nootState/revealed'), revealed)
+
+/**
+ * Same phone-pick flow as Feud: a hit reveals the song, plays the fanfare
+ * and auto-awards the round's points; a miss greys that option out for the
+ * next buzz winner. Buzzers relock either way until the host re-arms.
+ */
+export function submitNootGuess(player, choice, nootState) {
+  const correct = choice === nootState.correct
+  const updates = {
+    'nootState/lastGuess': {
+      userName: player.userName,
+      team: player.team,
+      choice,
+      correct,
+    },
+    buzzerState: { isUnlocked: false, firstBuzzed: null },
+    soundCue: { name: correct ? 'fanfare' : 'strike', ts: serverTimestamp() },
+  }
+  if (correct) {
+    updates['nootState/revealed'] = true
+    updates[`scores/${player.team}`] = increment(nootState.points || 10)
+  } else {
+    updates['nootState/wrongGuesses'] = [
+      ...(nootState.wrongGuesses || []),
+      choice,
+    ]
   }
   return update(game(), updates)
 }

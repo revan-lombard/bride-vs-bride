@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { GAMES, TEAMS, loadPlayer, savePlayer } from '../lib/schema'
 import { THEME } from '../lib/theme'
-import { buzz, castVote, submitFeudGuess } from '../lib/gameActions'
+import { buzz, castVote, submitFeudGuess, submitNootGuess } from '../lib/gameActions'
 
 /**
  * The phone-in-hand view. Guests join once (name + team, persisted in
@@ -41,6 +41,13 @@ export default function GuestView({ state, connected }) {
         )}
         {state.currentGame === GAMES.LYRIC && (
           <BuzzerPad player={player} buzzerState={state.buzzerState} />
+        )}
+        {state.currentGame === GAMES.NOOT && (
+          <NootPad
+            player={player}
+            nootState={state.nootState}
+            buzzerState={state.buzzerState}
+          />
         )}
         {state.currentGame === GAMES.POLL && (
           <VotePad player={player} pollState={state.pollState} />
@@ -171,6 +178,74 @@ function FeudPad({ player, feudState, buzzerState }) {
       {iWon ? (
         <p className="text-center font-bold text-green-400 animate-buzz-pulse">
           🎉 You buzzed first — pick your answer!
+        </p>
+      ) : firstBuzzed ? (
+        <p className="text-center text-white/60">
+          🔒 {firstBuzzed.userName} is answering…
+        </p>
+      ) : (
+        <button
+          onClick={() => isUnlocked && buzz(player)}
+          disabled={!isUnlocked}
+          className={`w-full h-24 rounded-2xl text-2xl font-extrabold transition select-none ${
+            isUnlocked
+              ? 'bg-red-500 active:bg-red-700 active:scale-95 animate-buzz-pulse'
+              : 'bg-gray-600 opacity-50'
+          }`}
+        >
+          {isUnlocked ? 'BUZZ!' : 'Buzzers locked'}
+        </button>
+      )}
+    </div>
+  )
+}
+
+/** Noot vir Noot on the phone: same buzz-then-pick flow as Feud. */
+function NootPad({ player, nootState, buzzerState }) {
+  const { prompt, options = [], correct, revealed, wrongGuesses = [] } = nootState || {}
+  const { isUnlocked, firstBuzzed } = buzzerState || {}
+  const iWon = firstBuzzed?.userName === player.userName
+
+  if (!options.length) {
+    return <BuzzerPad player={player} buzzerState={buzzerState} />
+  }
+
+  return (
+    <div className="w-full max-w-sm space-y-4">
+      <h2 className="text-xl font-bold text-center">🎶 {prompt}</h2>
+
+      <div className="space-y-2">
+        {options.map((option) => {
+          const isWrong = wrongGuesses.includes(option)
+          const isCorrectRevealed = revealed && option === correct
+          return (
+            <button
+              key={option}
+              onClick={() =>
+                iWon && !revealed && submitNootGuess(player, option, nootState)
+              }
+              disabled={!iWon || revealed || isWrong}
+              className={`w-full rounded-xl px-4 py-3 text-left font-bold transition ${
+                isCorrectRevealed
+                  ? 'bg-green-700 ring-2 ring-green-400'
+                  : isWrong
+                    ? 'bg-white/5 text-white/30 line-through'
+                    : iWon && !revealed
+                      ? 'bg-white text-stage active:scale-95 ring-2 ring-white/60'
+                      : 'bg-white/10 text-white/60'
+              }`}
+            >
+              {option} {isCorrectRevealed && '✅'}
+            </button>
+          )
+        })}
+      </div>
+
+      {revealed ? (
+        <p className="text-center text-white/60">🎉 Song revealed — next round soon!</p>
+      ) : iWon ? (
+        <p className="text-center font-bold text-green-400 animate-buzz-pulse">
+          🎉 You buzzed first — which song is it?
         </p>
       ) : firstBuzzed ? (
         <p className="text-center text-white/60">
