@@ -11,6 +11,7 @@ export const GAMES = {
   POLL: 'POLL',
   LYRIC: 'LYRIC',
   NOOT: 'NOOT',
+  WINNER: 'WINNER',
 }
 
 /** Which games use the buzzers (drives the host panel's buzzer section). */
@@ -83,6 +84,9 @@ export const DEFAULT_STATE = {
     playback: null,
     lastGuess: null,
   },
+  // Countdown shown big on the TV. { duration, endsAt } — visual only,
+  // the host still locks buzzers / closes polls themselves.
+  timer: null,
   // Host-triggered one-shot audio cue. Display view plays it when the
   // timestamp changes. { name: 'buzz'|'correct'|'strike'|'fanfare', ts }
   soundCue: null,

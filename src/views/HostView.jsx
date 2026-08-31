@@ -20,6 +20,8 @@ import {
   loadNootRound,
   triggerNootPlayback,
   revealNootAnswer,
+  startTimer,
+  clearTimer,
   triggerSound,
   resetGame,
 } from '../lib/gameActions'
@@ -43,7 +45,7 @@ export default function HostView({ state, connected }) {
       </header>
 
       <Section title="Game">
-        <div className="grid grid-cols-5 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {Object.values(GAMES).map((g) => (
             <button
               key={g}
@@ -52,7 +54,7 @@ export default function HostView({ state, connected }) {
                 state.currentGame === g ? 'bg-white text-stage' : 'bg-white/15'
               }`}
             >
-              {g}
+              {g === 'WINNER' ? '🏆 WINNER' : g}
             </button>
           ))}
         </div>
@@ -114,6 +116,26 @@ export default function HostView({ state, connected }) {
           <NootControls nootState={state.nootState} />
         </Section>
       )}
+
+      <Section title="Timer (on the TV)">
+        <div className="grid grid-cols-4 gap-2">
+          {[30, 60, 90].map((s) => (
+            <button
+              key={s}
+              onClick={() => startTimer(s)}
+              className="rounded-lg bg-white/15 py-3 text-sm font-bold"
+            >
+              ⏱ {s}s
+            </button>
+          ))}
+          <button
+            onClick={clearTimer}
+            className="rounded-lg bg-white/15 py-3 text-sm font-bold"
+          >
+            Clear
+          </button>
+        </div>
+      </Section>
 
       <Section title="Sounds">
         <div className="grid grid-cols-4 gap-2">

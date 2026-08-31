@@ -7,4 +7,7 @@ export const THEME = {
   brideA: 'Melissa', // Melissa Lombard
   brideB: 'Calista', // Calista Joubert
   title: '💍 Bride vs. Bride 💍',
+  // PIN for /#/host and /#/survey-results. Party-grade security only —
+  // it just stops curious guests who edit the URL.
+  hostPin: '2811',
 }

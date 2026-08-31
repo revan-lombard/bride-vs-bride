@@ -16,9 +16,14 @@ export default function DisplayView({ state }) {
 
   if (!state) return <Centered>Connecting…</Centered>
 
+  // Feud/Noot: guests pick on their phones after buzzing, so the board must
+  // stay visible — the buzz shows as a banner instead of a full takeover.
+  const compactBuzz = [GAMES.FEUD, GAMES.NOOT].includes(state.currentGame)
+
   return (
     <div className="h-full flex flex-col p-8 gap-6 overflow-hidden">
       <Scoreboard scores={state.scores} />
+      <TimerBanner timer={state.timer} />
 
       <main className="flex-1 flex items-center justify-center relative">
         {state.currentGame === GAMES.LOBBY && <LobbyScreen />}
@@ -39,8 +44,99 @@ export default function DisplayView({ state }) {
           />
         )}
 
-        <BuzzOverlay buzzerState={state.buzzerState} />
+        {state.currentGame === GAMES.WINNER && <WinnerScreen scores={state.scores} />}
+
+        <BuzzOverlay buzzerState={state.buzzerState} compact={compactBuzz} />
       </main>
+    </div>
+  )
+}
+
+/** Big countdown under the scoreboard; flashes TIME'S UP, then disappears. */
+function TimerBanner({ timer }) {
+  const [now, setNow] = useState(Date.now())
+
+  useEffect(() => {
+    if (!timer?.endsAt) return
+    const tick = setInterval(() => setNow(Date.now()), 250)
+    return () => clearInterval(tick)
+  }, [timer?.endsAt])
+
+  if (!timer?.endsAt) return null
+  const remaining = Math.ceil((timer.endsAt - now) / 1000)
+  if (remaining <= -4) return null
+
+  return (
+    <div className="text-center">
+      {remaining > 0 ? (
+        <span
+          className={`text-6xl font-extrabold tabular-nums ${
+            remaining <= 5 ? 'text-red-400 animate-buzz-pulse inline-block' : ''
+          }`}
+        >
+          ⏱ {remaining}
+        </span>
+      ) : (
+        <span className="text-6xl font-extrabold text-red-400 animate-strike-flash inline-block">
+          ⏰ TIME'S UP!
+        </span>
+      )}
+    </div>
+  )
+}
+
+/** Final standings with CSS confetti — switch here to end the show. */
+function WinnerScreen({ scores }) {
+  const teams = Object.values(TEAMS)
+  const a = scores?.teamA ?? 0
+  const b = scores?.teamB ?? 0
+  const tie = a === b
+  const winner = a >= b ? TEAMS.teamA : TEAMS.teamB
+
+  return (
+    <div className="text-center space-y-8 relative">
+      <Confetti />
+      <div className="text-8xl">{tie ? '🤝' : '👑'}</div>
+      <h1 className="text-6xl font-extrabold">
+        {tie ? "It's a tie!" : `${winner.label} wins!`}
+      </h1>
+      <div className="flex justify-center gap-12 text-3xl font-bold">
+        {teams.map((t) => (
+          <span key={t.id} className={t.id === 'teamA' ? 'text-bride-a' : 'text-bride-b'}>
+            {t.label}: {scores?.[t.id] ?? 0}
+          </span>
+        ))}
+      </div>
+      <p className="text-2xl text-white/70">Thank you for playing! 🥂</p>
+    </div>
+  )
+}
+
+function Confetti() {
+  // Static-per-mount confetti field; pure CSS animation, no library.
+  const pieces = Array.from({ length: 80 }, (_, i) => ({
+    left: `${(i * 37) % 100}%`,
+    delay: `${(i % 20) * 0.25}s`,
+    duration: `${3 + (i % 5)}s`,
+    color: ['#f472b6', '#a78bfa', '#fbbf24', '#34d399', '#f87171'][i % 5],
+    size: 8 + (i % 3) * 4,
+  }))
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden">
+      {pieces.map((p, i) => (
+        <span
+          key={i}
+          className="absolute top-[-5%] animate-confetti-fall"
+          style={{
+            left: p.left,
+            width: p.size,
+            height: p.size,
+            backgroundColor: p.color,
+            animationDelay: p.delay,
+            animationDuration: p.duration,
+          }}
+        />
+      ))}
     </div>
   )
 }
@@ -367,11 +463,27 @@ function NootScreen({ nootState, audioFiles, onLoadFiles }) {
   )
 }
 
-/** Full-screen takeover when somebody wins the buzz. */
-function BuzzOverlay({ buzzerState }) {
+/**
+ * Buzz-winner display: full-screen takeover normally, or a slim banner in
+ * games where the board must stay visible while the winner picks.
+ */
+function BuzzOverlay({ buzzerState, compact = false }) {
   const winner = buzzerState?.firstBuzzed
   if (!winner) return null
   const teamColor = winner.team === 'teamA' ? 'bg-bride-a-dark' : 'bg-bride-b-dark'
+
+  if (compact) {
+    return (
+      <div
+        className={`absolute top-0 left-1/2 -translate-x-1/2 ${teamColor} rounded-2xl px-8 py-3 flex items-center gap-4 animate-card-reveal shadow-2xl`}
+      >
+        <span className="text-4xl">🔔</span>
+        <span className="text-3xl font-extrabold">{winner.userName}</span>
+        <span className="text-xl text-white/80">is answering…</span>
+      </div>
+    )
+  }
+
   return (
     <div
       className={`absolute inset-0 ${teamColor} rounded-3xl flex flex-col items-center justify-center animate-card-reveal`}

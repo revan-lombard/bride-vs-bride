@@ -78,6 +78,11 @@ export const triggerLyricPlayback = (action) =>
 export const triggerSound = (name) =>
   set(game('soundCue'), { name, ts: serverTimestamp() })
 
+export const startTimer = (seconds) =>
+  set(game('timer'), { duration: seconds, endsAt: Date.now() + seconds * 1000 })
+
+export const clearTimer = () => set(game('timer'), null)
+
 /* ------------------------------------------------------------------ */
 /* Guest actions                                                       */
 /* ------------------------------------------------------------------ */

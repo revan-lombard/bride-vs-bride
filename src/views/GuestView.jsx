@@ -49,6 +49,9 @@ export default function GuestView({ state, connected }) {
             buzzerState={state.buzzerState}
           />
         )}
+        {state.currentGame === GAMES.WINNER && (
+          <Splash text="🏆 Final scores are on the TV — thanks for playing! 🥂" />
+        )}
         {state.currentGame === GAMES.POLL && (
           <VotePad player={player} pollState={state.pollState} />
         )}
