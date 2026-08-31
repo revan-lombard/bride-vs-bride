@@ -57,6 +57,19 @@ export const POLL_PRESETS = [
  * before its most famous line (usually the title line), answer = that
  * famous line. Delete any you don't want; on the day you just tap the
  * ones you like.
+ *
+ * 🎵 KARAOKE ROUNDS: prepare a track with tools/prepare_lyric_track.py
+ * (song plays normally, vocals fade at the cut, backing continues), then
+ * add to the entry:
+ *
+ *   audio: 'dancing-queen-karaoke-cut.mp3',   // filename only
+ *   cutAt: 64,                                 // seconds where vocals stop
+ *
+ * The mp3s are NEVER committed or deployed (copyrighted audio on a public
+ * site is a no-go) — keep them in a folder on the display laptop and load
+ * them with one click on the TV view when prompted. On the day: tap the
+ * 🎵 round, tap "▶️ Play on TV" — when the vocals drop out the TV flips to
+ * the blanks + "buzz in" state automatically.
  */
 export const LYRIC_ROUNDS = [
   // ---- 70s ----

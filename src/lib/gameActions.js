@@ -55,11 +55,21 @@ export const revealFeudAnswer = (index, revealed = true) =>
 
 export const setStrikes = (strikes) => set(game('feudState/strikes'), strikes)
 
-export const loadLyric = (snippet, answer) =>
-  set(game('lyricState'), { snippet, answer, showAnswer: false })
+export const loadLyric = (snippet, answer, audio = '', cutAt = 0) =>
+  set(game('lyricState'), {
+    snippet,
+    answer,
+    audio,
+    cutAt,
+    showAnswer: false,
+    playback: null,
+  })
 
 export const showLyricAnswer = (show = true) =>
   set(game('lyricState/showAnswer'), show)
+
+export const triggerLyricPlayback = (action) =>
+  set(game('lyricState/playback'), { action, ts: serverTimestamp() })
 
 export const triggerSound = (name) =>
   set(game('soundCue'), { name, ts: serverTimestamp() })

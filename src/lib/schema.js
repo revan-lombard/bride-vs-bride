@@ -52,6 +52,12 @@ export const DEFAULT_STATE = {
     snippet: '',
     answer: '',
     showAnswer: false,
+    // Karaoke rounds: audio filename (loaded from a local folder on the
+    // display laptop, never bundled) and the second the vocals cut out.
+    audio: '',
+    cutAt: 0,
+    // One-shot play/stop cue, same pattern as soundCue. { action, ts }
+    playback: null,
   },
   // Host-triggered one-shot audio cue. Display view plays it when the
   // timestamp changes. { name: 'buzz'|'correct'|'strike'|'fanfare', ts }

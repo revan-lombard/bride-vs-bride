@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Copyrighted audio for karaoke lyric rounds must never be committed
+*.mp3
+*.wav
+*.m4a
+*.flac

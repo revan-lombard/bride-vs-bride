@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { GAMES, TEAMS, MAX_STRIKES } from '../lib/schema'
 import { THEME } from '../lib/theme'
@@ -10,6 +10,9 @@ import { playCue } from '../lib/sounds'
  */
 export default function DisplayView({ state }) {
   useSoundCues(state?.soundCue)
+  // Karaoke audio: filename -> object URL, picked from a local folder once.
+  // Lives here (not in LyricScreen) so switching games doesn't drop it.
+  const [audioFiles, setAudioFiles] = useState({})
 
   if (!state) return <Centered>Connecting…</Centered>
 
@@ -21,7 +24,20 @@ export default function DisplayView({ state }) {
         {state.currentGame === GAMES.LOBBY && <LobbyScreen />}
         {state.currentGame === GAMES.FEUD && <FeudBoard feudState={state.feudState} />}
         {state.currentGame === GAMES.POLL && <PollBoard pollState={state.pollState} />}
-        {state.currentGame === GAMES.LYRIC && <LyricScreen lyricState={state.lyricState} />}
+        {state.currentGame === GAMES.LYRIC && (
+          <LyricScreen
+            lyricState={state.lyricState}
+            audioFiles={audioFiles}
+            onLoadFiles={(files) =>
+              setAudioFiles((prev) => ({
+                ...prev,
+                ...Object.fromEntries(
+                  [...files].map((f) => [f.name, URL.createObjectURL(f)])
+                ),
+              }))
+            }
+          />
+        )}
 
         <BuzzOverlay buzzerState={state.buzzerState} />
       </main>
@@ -152,8 +168,36 @@ function PollBoard({ pollState }) {
   )
 }
 
-function LyricScreen({ lyricState }) {
-  const { snippet, answer, showAnswer } = lyricState || {}
+function LyricScreen({ lyricState, audioFiles, onLoadFiles }) {
+  const { snippet, answer, showAnswer, audio, cutAt, playback } = lyricState || {}
+  const audioRef = useRef(null)
+  const lastPlayTs = useRef(null)
+  // Karaoke phase: while the vocals are still singing we show "sing along";
+  // once playback passes cutAt the round is live and the blanks appear.
+  const [vocalsCut, setVocalsCut] = useState(false)
+
+  const audioUrl = audio ? audioFiles[audio] : null
+  const hasKaraoke = Boolean(audio)
+
+  // New snippet = new round: reset the phase.
+  useEffect(() => setVocalsCut(false), [snippet, audio])
+
+  // One-shot play/stop cue from the host (same skip-initial pattern as sounds).
+  useEffect(() => {
+    if (!playback?.ts || playback.ts === lastPlayTs.current) return
+    const isInitial = lastPlayTs.current === null
+    lastPlayTs.current = playback.ts
+    if (isInitial) return
+    const el = audioRef.current
+    if (!el) return
+    if (playback.action === 'play') {
+      el.currentTime = 0
+      setVocalsCut(false)
+      el.play().catch(() => {})
+    } else {
+      el.pause()
+    }
+  }, [playback])
 
   if (!snippet) {
     return (
@@ -164,16 +208,55 @@ function LyricScreen({ lyricState }) {
     )
   }
 
+  // Word-shaped blanks: keeps the rhythm of the missing line visible.
+  const blanks = (answer || '')
+    .split(' ')
+    .map((w) => '＿'.repeat(Math.max(Math.round(w.length / 2), 1)))
+    .join('  ')
+
+  const awaiting = !hasKaraoke || vocalsCut
+
   return (
     <div className="w-full max-w-5xl text-center space-y-10">
       <h2 className="text-3xl font-bold text-white/60">🎵 Finish the Lyric</h2>
       <p className="text-5xl font-extrabold leading-snug">“{snippet}”</p>
+
       {showAnswer ? (
         <p className="text-5xl font-extrabold text-green-400 animate-card-reveal">
           {answer}
         </p>
+      ) : awaiting ? (
+        <div className="space-y-6">
+          <p className="text-5xl font-extrabold text-white/40 tracking-widest">{blanks}</p>
+          <p className="text-2xl text-white/50 animate-buzz-pulse">Buzz in when you know it!</p>
+        </div>
       ) : (
-        <p className="text-2xl text-white/50">Buzz in when you know it!</p>
+        <p className="text-2xl text-white/50">🎶 Sing along…</p>
+      )}
+
+      {hasKaraoke && (
+        <>
+          <audio
+            ref={audioRef}
+            src={audioUrl || undefined}
+            onTimeUpdate={(e) => {
+              if (cutAt > 0 && e.target.currentTime >= cutAt) setVocalsCut(true)
+            }}
+            onEnded={() => setVocalsCut(true)}
+          />
+          {!audioUrl && (
+            <label className="inline-block bg-white/10 rounded-xl px-4 py-3 text-lg cursor-pointer">
+              📂 Click to load the music folder (looking for <b>{audio}</b>)
+              <input
+                type="file"
+                accept="audio/*"
+                multiple
+                className="hidden"
+                onChange={(e) => onLoadFiles(e.target.files)}
+              />
+            </label>
+          )}
+        </>
       )}
     </div>
   )

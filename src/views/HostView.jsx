@@ -16,6 +16,7 @@ import {
   setStrikes,
   loadLyric,
   showLyricAnswer,
+  triggerLyricPlayback,
   triggerSound,
   resetGame,
 } from '../lib/gameActions'
@@ -335,8 +336,8 @@ function LyricControls({ lyricState }) {
     <div className="space-y-2">
       <ContentBank
         items={LYRIC_ROUNDS}
-        label={(l) => l.song || l.snippet}
-        onPick={(l) => loadLyric(l.snippet, l.answer)}
+        label={(l) => `${l.audio ? '🎵 ' : ''}${l.song || l.snippet}`}
+        onPick={(l) => loadLyric(l.snippet, l.answer, l.audio || '', l.cutAt || 0)}
       />
       <input
         className="w-full rounded-lg bg-white/10 px-3 py-2 text-sm"
@@ -363,6 +364,22 @@ function LyricControls({ lyricState }) {
           <p className={lyricState.showAnswer ? 'text-green-400' : 'text-white/40'}>
             → {lyricState.answer || '(no answer set)'}
           </p>
+          {lyricState.audio && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => triggerLyricPlayback('play')}
+                className="flex-1 rounded-lg bg-green-700 py-2 font-bold"
+              >
+                ▶️ Play on TV
+              </button>
+              <button
+                onClick={() => triggerLyricPlayback('stop')}
+                className="flex-1 rounded-lg bg-white/15 py-2 font-bold"
+              >
+                ⏹ Stop
+              </button>
+            </div>
+          )}
           <button
             onClick={() => showLyricAnswer(!lyricState.showAnswer)}
             className={`w-full rounded-lg py-2 font-bold ${

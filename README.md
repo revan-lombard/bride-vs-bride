@@ -54,6 +54,15 @@ Live URL: `https://<your-username>.github.io/bride-vs-bride/`
 4. Before the event, tap **Close** on the results page so late submissions can't change locked-in boards.
 5. On the day, tap **Use as Feud round** on any question — vote counts become the board (points = votes), then switch to FEUD on the host panel.
 
+## Karaoke lyric rounds
+
+The Lyric game can play the actual song: the track plays with vocals, the vocals fade out at your chosen moment, the backing continues, and the TV flips to word-shaped blanks + "buzz in".
+
+1. **Prepare each track** (once, before the event): `pip install demucs`, then
+   `python tools/prepare_lyric_track.py song.mp3 --cut 1:04` — it prints the `audio:` and `cutAt:` lines to paste into that song's entry in `src/lib/rounds.js`.
+2. **Keep the mp3s in a folder on the display laptop** — they are never committed or deployed (copyrighted audio must not go on a public site). `.gitignore` blocks mp3s as a safety net.
+3. **On the day**: the first karaoke round shows a "load the music folder" button on the TV — click it once and select all the prepared mp3s. From then on the host's ▶️ Play on TV button runs each round end-to-end.
+
 ## Running the show (day-of checklist)
 
 1. Open `/#/display` on the TV and **click the page once** (unlocks browser audio for sound cues).
