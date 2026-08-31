@@ -4,6 +4,18 @@
       ".read": true,
       ".write": true
     },
+    "survey": {
+      "config": {
+        ".read": true,
+        ".write": true
+      },
+      "responses": {
+        ".read": true,
+        "$respondentId": {
+          ".write": "root.child('survey/config/open').val() !== false"
+        }
+      }
+    },
     "$other": {
       ".read": false,
       ".write": false

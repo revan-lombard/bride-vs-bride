@@ -15,12 +15,13 @@ What's built, what's worth adding, and what would take the show to the next leve
 - QR code for the guest link (on the lobby screen and in the host panel)
 - Connection indicator on guest phones; full state reset button
 - Auto-deploy to GitHub Pages via Actions
+- **Pre-event survey** (built 2026-08-31): `/#/survey` invitee view + `/#/survey-results` host tally with open/close toggle and "Use as Feud round" (points = votes). Placeholder questions in `src/lib/surveyQuestions.js` still need replacing with the real ones.
 
 ---
 
-## 📋 Committed next: pre-event Feud survey (multiple choice)
+## 📋 Built: pre-event Feud survey (multiple choice)
 
-The real Family Feud trick: survey the invitees *before* the event, then the boards are "we asked the kitchen tea guests…" with genuine data. Decided design:
+The real Family Feud trick: survey the invitees *before* the event, then the boards are "we asked the kitchen tea guests…" with genuine data. Decided design (all implemented):
 
 - **Multiple choice, not free text.** With a small group, free-text answers scatter too widely to make good boards ("morning breath" vs "bad breath" vs "her breath"). Each question ships with 4–6 fixed options (questions and options written by Revan in `src/lib/surveyQuestions.js`). This also means tallying is fully automatic — zero manual answer-grouping.
 - **Standalone route `/#/survey`** — the URL sent with the invites. Themed like the game ("💍 Bride vs. Bride — help us build the game!") so it doubles as a teaser. Deliberately separate from the game views; invitees never see a link that's one hash-edit from `/#/host`.

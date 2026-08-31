@@ -2,13 +2,15 @@
 
 A real-time multi-game web app for a bridal kitchen tea. Guests scan a QR code and use their phones as buzzers and voting pads; the host runs the show from a control panel; a TV/projector shows the live board.
 
-## The three screens
+## The screens
 
 | Route | Who | What |
 |---|---|---|
 | `/#/` | Guests | Join a team, buzz, vote |
 | `/#/host` | Host | Switch games, arm buzzers, run polls/feud rounds, edit scores, fire sound cues |
 | `/#/display` | TV / projector | Scoreboard, Feud board, poll results, buzz alerts (16:9) |
+| `/#/survey` | Invitees (pre-event) | Multiple-choice survey sent with the invites — answers build the Feud boards |
+| `/#/survey-results` | Host | Live survey tallies, open/close toggle, one-tap "Use as Feud round" |
 
 Games: **LOBBY** (join screen), **FEUD** (Family Feud board with reveals + strikes), **POLL** (live voting with animated results), **LYRIC** (finish-the-lyric buzzer round).
 
@@ -44,6 +46,14 @@ Push to `main`. The GitHub Actions workflow builds and publishes to GitHub Pages
 
 Live URL: `https://<your-username>.github.io/bride-vs-bride/`
 
+## Pre-event survey
+
+1. Edit `src/lib/surveyQuestions.js` with the real questions (4–6 fixed options each) and push.
+2. Send `/#/survey` out with the invites — it's themed as a teaser and never links to the game views.
+3. Watch responses roll in live at `/#/survey-results`. One response set per device; names optional.
+4. Before the event, tap **Close** on the results page so late submissions can't change locked-in boards.
+5. On the day, tap **Use as Feud round** on any question — vote counts become the board (points = votes), then switch to FEUD on the host panel.
+
 ## Running the show (day-of checklist)
 
 1. Open `/#/display` on the TV and **click the page once** (unlocks browser audio for sound cues).
@@ -60,16 +70,21 @@ Live URL: `https://<your-username>.github.io/bride-vs-bride/`
 ```
 src/
   lib/
-    firebase.js     Firebase init (env-driven)
-    schema.js       Canonical state shape, teams, player persistence
-    gameActions.js  Every read/write to shared state (host + guest)
-    sounds.js       WebAudio synth cues (no audio files)
+    firebase.js        Firebase init (env-driven)
+    schema.js          Canonical state shape, teams, player persistence
+    gameActions.js     Every read/write to shared game state (host + guest)
+    surveyQuestions.js Pre-event survey content — EDIT with the real questions
+    surveyActions.js   Survey reads/writes (/survey root), tally + Feud converter
+    sounds.js          WebAudio synth cues (no audio files)
   hooks/
-    useGameState.js Live subscription all views render from
+    useGameState.js    Live /game subscription all game views render from
+    useSurvey.js       Live /survey subscription for the survey views
   views/
-    GuestView.jsx   Join screen, buzzer pad, vote pad
-    HostView.jsx    Control panel
-    DisplayView.jsx TV board
+    GuestView.jsx         Join screen, buzzer pad, vote pad
+    HostView.jsx          Control panel
+    DisplayView.jsx       TV board
+    SurveyView.jsx        Invitee pre-event survey
+    SurveyResultsView.jsx Host tally + "Use as Feud round"
 docs/
   firebase-rules.json  Database security rules
   FEATURES.md          Roadmap of potential features & enhancements
