@@ -3,6 +3,8 @@
  * Realtime Database. Matches the technical brief's global data schema.
  */
 
+import { THEME } from './theme'
+
 export const GAMES = {
   LOBBY: 'LOBBY',
   FEUD: 'FEUD',
@@ -11,8 +13,8 @@ export const GAMES = {
 }
 
 export const TEAMS = {
-  teamA: { id: 'teamA', label: 'Team Bride A', color: 'bride-a' },
-  teamB: { id: 'teamB', label: 'Team Bride B', color: 'bride-b' },
+  teamA: { id: 'teamA', label: `Team ${THEME.brideA}`, color: 'bride-a' },
+  teamB: { id: 'teamB', label: `Team ${THEME.brideB}`, color: 'bride-b' },
 }
 
 export const MAX_STRIKES = 3
@@ -44,6 +46,12 @@ export const DEFAULT_STATE = {
       // { text, points, revealed }
     ],
     strikes: 0,
+  },
+  lyricState: {
+    // snippet shows on the TV; answer stays hidden until the host reveals it
+    snippet: '',
+    answer: '',
+    showAnswer: false,
   },
   // Host-triggered one-shot audio cue. Display view plays it when the
   // timestamp changes. { name: 'buzz'|'correct'|'strike'|'fanfare', ts }

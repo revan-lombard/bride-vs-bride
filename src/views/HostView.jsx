@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { GAMES, TEAMS, MAX_STRIKES } from '../lib/schema'
+import { FEUD_ROUNDS, POLL_PRESETS, LYRIC_ROUNDS } from '../lib/rounds'
 import {
   setCurrentGame,
   adjustScore,
@@ -12,6 +13,8 @@ import {
   loadFeudRound,
   revealFeudAnswer,
   setStrikes,
+  loadLyric,
+  showLyricAnswer,
   triggerSound,
   resetGame,
 } from '../lib/gameActions'
@@ -90,6 +93,12 @@ export default function HostView({ state, connected }) {
       {state.currentGame === GAMES.FEUD && (
         <Section title="Family Feud">
           <FeudControls feudState={state.feudState} />
+        </Section>
+      )}
+
+      {state.currentGame === GAMES.LYRIC && (
+        <Section title="Finish the Lyric">
+          <LyricControls lyricState={state.lyricState} />
         </Section>
       )}
 
@@ -179,6 +188,14 @@ function PollControls({ pollState }) {
 
   return (
     <div className="space-y-2">
+      <ContentBank
+        items={POLL_PRESETS}
+        label={(p) => p.question}
+        onPick={(p) => {
+          setQuestion(p.question)
+          setOptionsText(p.options.join('\n'))
+        }}
+      />
       <input
         className="w-full rounded-lg bg-white/10 px-3 py-2"
         placeholder="Poll question"
@@ -233,8 +250,20 @@ function FeudControls({ feudState }) {
     loadFeudRound(q, parsed)
   }
 
+  const revealedPoints = answers
+    .filter((a) => a.revealed)
+    .reduce((sum, a) => sum + (a.points || 0), 0)
+
   return (
     <div className="space-y-2">
+      <ContentBank
+        items={FEUD_ROUNDS}
+        label={(r) => r.question}
+        onPick={(r) => loadFeudRound(r.question, r.answers)}
+      />
+      <p className="text-xs text-white/40">
+        Survey boards load from the <a href="#/survey-results" className="underline">survey results</a> page.
+      </p>
       <textarea
         className="w-full rounded-lg bg-white/10 px-3 py-2 text-sm font-mono"
         rows={5}
@@ -277,8 +306,91 @@ function FeudControls({ feudState }) {
               </button>
             ))}
           </div>
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            {Object.values(TEAMS).map((t) => (
+              <button
+                key={t.id}
+                onClick={() => adjustScore(t.id, revealedPoints)}
+                disabled={revealedPoints === 0}
+                className={`rounded-lg py-2 text-sm font-bold disabled:opacity-30 ${
+                  t.id === 'teamA' ? 'bg-bride-a-dark' : 'bg-bride-b-dark'
+                }`}
+              >
+                🏆 +{revealedPoints} → {t.label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function LyricControls({ lyricState }) {
+  const [snippet, setSnippet] = useState('')
+  const [answer, setAnswer] = useState('')
+
+  return (
+    <div className="space-y-2">
+      <ContentBank
+        items={LYRIC_ROUNDS}
+        label={(l) => l.snippet}
+        onPick={(l) => loadLyric(l.snippet, l.answer)}
+      />
+      <input
+        className="w-full rounded-lg bg-white/10 px-3 py-2 text-sm"
+        placeholder="Lyric shown on the TV (stop where they must finish it…)"
+        value={snippet}
+        onChange={(e) => setSnippet(e.target.value)}
+      />
+      <input
+        className="w-full rounded-lg bg-white/10 px-3 py-2 text-sm"
+        placeholder="The missing words (revealed by you)"
+        value={answer}
+        onChange={(e) => setAnswer(e.target.value)}
+      />
+      <button
+        onClick={() => snippet.trim() && loadLyric(snippet.trim(), answer.trim())}
+        className="w-full rounded-lg bg-green-700 py-2 font-bold"
+      >
+        Show on TV
+      </button>
+
+      {lyricState?.snippet && (
+        <div className="bg-white/10 rounded-lg p-3 space-y-2 text-sm">
+          <p>🎵 “{lyricState.snippet}”</p>
+          <p className={lyricState.showAnswer ? 'text-green-400' : 'text-white/40'}>
+            → {lyricState.answer || '(no answer set)'}
+          </p>
+          <button
+            onClick={() => showLyricAnswer(!lyricState.showAnswer)}
+            className={`w-full rounded-lg py-2 font-bold ${
+              lyricState.showAnswer ? 'bg-white/15' : 'bg-green-700'
+            }`}
+          >
+            {lyricState.showAnswer ? 'Hide answer' : '✨ Reveal answer'}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** Numbered one-tap load buttons for pre-written content from rounds.js. */
+function ContentBank({ items, label, onPick }) {
+  if (!items.length) return null
+  return (
+    <div className="flex flex-wrap gap-2">
+      {items.map((item, i) => (
+        <button
+          key={i}
+          onClick={() => onPick(item)}
+          title={label(item)}
+          className="rounded-lg bg-white/15 px-3 py-2 text-xs font-bold max-w-full truncate"
+        >
+          {i + 1}. {label(item)}
+        </button>
+      ))}
     </div>
   )
 }

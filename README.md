@@ -75,6 +75,8 @@ src/
     gameActions.js     Every read/write to shared game state (host + guest)
     surveyQuestions.js Pre-event survey content — EDIT with the real questions
     surveyActions.js   Survey reads/writes (/survey root), tally + Feud converter
+    theme.js           Brides' names + event title — EDIT with the real names
+    rounds.js          Pre-loaded Feud/poll/lyric content banks — EDIT before the event
     sounds.js          WebAudio synth cues (no audio files)
   hooks/
     useGameState.js    Live /game subscription all game views render from

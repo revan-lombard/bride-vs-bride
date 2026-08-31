@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { GAMES, TEAMS, loadPlayer, savePlayer } from '../lib/schema'
+import { THEME } from '../lib/theme'
 import { buzz, castVote } from '../lib/gameActions'
 
 /**
@@ -59,7 +60,7 @@ function JoinScreen({ onJoin }) {
 
   return (
     <div className="min-h-full flex flex-col items-center justify-center p-6 gap-6">
-      <h1 className="text-3xl font-bold text-center">💍 Bride vs. Bride</h1>
+      <h1 className="text-3xl font-bold text-center">{THEME.title}</h1>
       <input
         className="w-full max-w-xs rounded-xl bg-white/10 px-4 py-3 text-lg text-center outline-none focus:ring-2 ring-white/50"
         placeholder="Your name"

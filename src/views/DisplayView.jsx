@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { GAMES, TEAMS, MAX_STRIKES } from '../lib/schema'
+import { THEME } from '../lib/theme'
 import { playCue } from '../lib/sounds'
 
 /**
@@ -20,7 +21,7 @@ export default function DisplayView({ state }) {
         {state.currentGame === GAMES.LOBBY && <LobbyScreen />}
         {state.currentGame === GAMES.FEUD && <FeudBoard feudState={state.feudState} />}
         {state.currentGame === GAMES.POLL && <PollBoard pollState={state.pollState} />}
-        {state.currentGame === GAMES.LYRIC && <LyricScreen />}
+        {state.currentGame === GAMES.LYRIC && <LyricScreen lyricState={state.lyricState} />}
 
         <BuzzOverlay buzzerState={state.buzzerState} />
       </main>
@@ -61,7 +62,7 @@ function LobbyScreen() {
   const guestUrl = `${location.origin}${import.meta.env.BASE_URL}#/`
   return (
     <div className="text-center space-y-8">
-      <h1 className="text-7xl font-extrabold">💍 Bride vs. Bride 💍</h1>
+      <h1 className="text-7xl font-extrabold">{THEME.title}</h1>
       <p className="text-2xl text-white/80">Scan to join a team</p>
       <div className="inline-block bg-white p-6 rounded-3xl">
         <QRCodeSVG value={guestUrl} size={280} />
@@ -151,11 +152,29 @@ function PollBoard({ pollState }) {
   )
 }
 
-function LyricScreen() {
+function LyricScreen({ lyricState }) {
+  const { snippet, answer, showAnswer } = lyricState || {}
+
+  if (!snippet) {
+    return (
+      <div className="text-center space-y-4">
+        <h2 className="text-6xl font-extrabold">🎵 Finish the Lyric</h2>
+        <p className="text-2xl text-white/70">Buzz in when you know it!</p>
+      </div>
+    )
+  }
+
   return (
-    <div className="text-center space-y-4">
-      <h2 className="text-6xl font-extrabold">🎵 Finish the Lyric</h2>
-      <p className="text-2xl text-white/70">Buzz in when you know it!</p>
+    <div className="w-full max-w-5xl text-center space-y-10">
+      <h2 className="text-3xl font-bold text-white/60">🎵 Finish the Lyric</h2>
+      <p className="text-5xl font-extrabold leading-snug">“{snippet}”</p>
+      {showAnswer ? (
+        <p className="text-5xl font-extrabold text-green-400 animate-card-reveal">
+          {answer}
+        </p>
+      ) : (
+        <p className="text-2xl text-white/50">Buzz in when you know it!</p>
+      )}
     </div>
   )
 }
