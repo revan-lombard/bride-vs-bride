@@ -69,7 +69,7 @@ The Lyric game can play the actual song: the track plays with vocals, the vocals
 2. Open `/#/host` on your phone/laptop.
 3. Guests scan the QR code shown in the LOBBY screen (or from the host panel).
 4. Switch games from the host panel — every phone follows automatically.
-5. **Feud rounds:** paste a round into the host panel as `Question` on line 1, then `answer | points` per line. Tap answers to reveal, tap ✕ for strikes.
+5. **Feud rounds:** load a round (survey results page, content bank, or paste `Question` + `answer | points` lines), then arm the buzzers. Guests see the question + options on their phones; the buzz winner picks on their phone and the board auto-reveals a hit (or auto-strikes a miss) with the sound cue. Re-arm for the next guess; award the revealed total with the 🏆 buttons. Manual tap-to-reveal and ✕ buttons still work as an override.
 6. **Polls:** type a question + options, open, then "Show results" for the big reveal.
 7. **Buzzer rounds (Feud face-offs / Lyric):** tap "Arm buzzers" — first phone to tap takes over the TV. Award points, re-arm, repeat.
 8. If anything goes weird: "Reset everything" puts the state back to defaults (scores included — edit scores back manually if needed).

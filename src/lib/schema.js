@@ -45,7 +45,12 @@ export const DEFAULT_STATE = {
     answers: [
       // { text, points, revealed }
     ],
+    // What guests see on their phones as pickable choices — board answer
+    // texts (shuffled) plus any decoys, e.g. zero-vote survey options.
+    options: [],
     strikes: 0,
+    // Last phone-submitted guess: { userName, team, choice, correct }
+    lastGuess: null,
   },
   lyricState: {
     // snippet shows on the TV; answer stays hidden until the host reveals it

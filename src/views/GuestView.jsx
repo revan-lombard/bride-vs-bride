@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { GAMES, TEAMS, loadPlayer, savePlayer } from '../lib/schema'
 import { THEME } from '../lib/theme'
-import { buzz, castVote } from '../lib/gameActions'
+import { buzz, castVote, submitFeudGuess } from '../lib/gameActions'
 
 /**
  * The phone-in-hand view. Guests join once (name + team, persisted in
@@ -32,7 +32,14 @@ export default function GuestView({ state, connected }) {
         {state.currentGame === GAMES.LOBBY && (
           <Splash text="🥂 Waiting for the host to start a game…" />
         )}
-        {(state.currentGame === GAMES.FEUD || state.currentGame === GAMES.LYRIC) && (
+        {state.currentGame === GAMES.FEUD && (
+          <FeudPad
+            player={player}
+            feudState={state.feudState}
+            buzzerState={state.buzzerState}
+          />
+        )}
+        {state.currentGame === GAMES.LYRIC && (
           <BuzzerPad player={player} buzzerState={state.buzzerState} />
         )}
         {state.currentGame === GAMES.POLL && (
@@ -119,6 +126,70 @@ function BuzzerPad({ player, buzzerState }) {
     >
       {isUnlocked ? 'BUZZ!' : 'Locked'}
     </button>
+  )
+}
+
+/**
+ * Feud on the phone: question on top, the fixed answer options below, big
+ * buzz bar at the bottom. Winning the buzz unlocks the options — the pick
+ * auto-reveals a hit (or auto-strikes a miss) for everyone.
+ */
+function FeudPad({ player, feudState, buzzerState }) {
+  const { question, options = [], answers = [] } = feudState || {}
+  const { isUnlocked, firstBuzzed } = buzzerState || {}
+  const iWon = firstBuzzed?.userName === player.userName
+  const revealed = new Set(answers.filter((a) => a.revealed).map((a) => a.text))
+
+  // No round with options loaded yet — plain buzzer, like the lyric game.
+  if (!question || !options.length) {
+    return <BuzzerPad player={player} buzzerState={buzzerState} />
+  }
+
+  return (
+    <div className="w-full max-w-sm space-y-4">
+      <h2 className="text-xl font-bold text-center">{question}</h2>
+
+      <div className="space-y-2">
+        {options.map((option) => (
+          <button
+            key={option}
+            onClick={() => iWon && submitFeudGuess(player, option, feudState)}
+            disabled={!iWon || revealed.has(option)}
+            className={`w-full rounded-xl px-4 py-3 text-left font-bold transition ${
+              revealed.has(option)
+                ? 'bg-green-900/50 text-white/50'
+                : iWon
+                  ? 'bg-white text-stage active:scale-95 ring-2 ring-white/60'
+                  : 'bg-white/10 text-white/60'
+            }`}
+          >
+            {option} {revealed.has(option) && '✅'}
+          </button>
+        ))}
+      </div>
+
+      {iWon ? (
+        <p className="text-center font-bold text-green-400 animate-buzz-pulse">
+          🎉 You buzzed first — pick your answer!
+        </p>
+      ) : firstBuzzed ? (
+        <p className="text-center text-white/60">
+          🔒 {firstBuzzed.userName} is answering…
+        </p>
+      ) : (
+        <button
+          onClick={() => isUnlocked && buzz(player)}
+          disabled={!isUnlocked}
+          className={`w-full h-24 rounded-2xl text-2xl font-extrabold transition select-none ${
+            isUnlocked
+              ? 'bg-red-500 active:bg-red-700 active:scale-95 animate-buzz-pulse'
+              : 'bg-gray-600 opacity-50'
+          }`}
+        >
+          {isUnlocked ? 'BUZZ!' : 'Buzzers locked'}
+        </button>
+      )}
+    </div>
   )
 }
 

@@ -280,6 +280,17 @@ function FeudControls({ feudState }) {
       {feudState?.question && (
         <div className="space-y-1">
           <p className="text-sm font-bold">{feudState.question}</p>
+          {feudState.lastGuess && (
+            <div
+              className={`rounded-lg p-2 text-sm text-center ${
+                feudState.lastGuess.correct ? 'bg-green-800' : 'bg-red-900/70'
+              }`}
+            >
+              <b>{feudState.lastGuess.userName}</b> ({TEAMS[feudState.lastGuess.team]?.label}) picked
+              “{feudState.lastGuess.choice}” —{' '}
+              {feudState.lastGuess.correct ? '✅ on the board!' : '❌ strike'}
+            </div>
+          )}
           {answers.map((a, i) => (
             <button
               key={i}

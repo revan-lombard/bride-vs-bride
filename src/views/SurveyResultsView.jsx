@@ -23,7 +23,9 @@ export default function SurveyResultsView() {
   const useAsRound = (question) => {
     const answers = surveyToFeudAnswers(responses, question)
     if (!answers.length) return
-    loadFeudRound(question.question, answers)
+    // Full option list (survey order) goes to guest phones — zero-vote
+    // options stay pickable as decoys that score a strike.
+    loadFeudRound(question.question, answers, question.options)
     setLoadedRound(question.id)
   }
 

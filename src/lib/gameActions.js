@@ -43,10 +43,13 @@ export const closePoll = () => set(game('pollState/isOpen'), false)
 export const showPollResults = (show = true) =>
   set(game('pollState/showResults'), show)
 
-export const loadFeudRound = (question, answers) =>
+const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5)
+
+export const loadFeudRound = (question, answers, options = null) =>
   set(game('feudState'), {
     question,
     answers: answers.map((a) => ({ ...a, revealed: false })),
+    options: options || shuffle(answers.map((a) => a.text)),
     strikes: 0,
   })
 
@@ -104,3 +107,33 @@ export const castVote = (player, choice) =>
     team: player.team,
     choice,
   })
+
+/**
+ * The buzz winner picks an answer on their phone. Auto-matched against the
+ * board (options come from the same fixed list, so text match is exact):
+ * a hit reveals the answer + plays the ding, a miss adds a strike. Buzzers
+ * lock until the host re-arms; a revealed answer picked again counts as a
+ * miss, Feud style.
+ */
+export function submitFeudGuess(player, choice, feudState) {
+  const idx = (feudState.answers || []).findIndex(
+    (a) => a.text === choice && !a.revealed
+  )
+  const correct = idx >= 0
+  const updates = {
+    'feudState/lastGuess': {
+      userName: player.userName,
+      team: player.team,
+      choice,
+      correct,
+    },
+    buzzerState: { isUnlocked: false, firstBuzzed: null },
+    soundCue: { name: correct ? 'correct' : 'strike', ts: serverTimestamp() },
+  }
+  if (correct) {
+    updates[`feudState/answers/${idx}/revealed`] = true
+  } else {
+    updates['feudState/strikes'] = Math.min((feudState.strikes || 0) + 1, 3)
+  }
+  return update(game(), updates)
+}
