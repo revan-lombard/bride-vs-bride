@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { GAMES, TEAMS, MAX_STRIKES } from '../lib/schema'
+import { THEME } from '../lib/theme'
 import { FEUD_ROUNDS, POLL_PRESETS, LYRIC_ROUNDS } from '../lib/rounds'
 import {
   setCurrentGame,
@@ -183,7 +184,7 @@ function BuzzerControls({ buzzerState }) {
 
 function PollControls({ pollState }) {
   const [question, setQuestion] = useState('')
-  const [optionsText, setOptionsText] = useState('Bride A\nBride B')
+  const [optionsText, setOptionsText] = useState(`${THEME.brideA}\n${THEME.brideB}`)
   const voteCount = Object.keys(pollState?.votes || {}).length
 
   return (
@@ -334,7 +335,7 @@ function LyricControls({ lyricState }) {
     <div className="space-y-2">
       <ContentBank
         items={LYRIC_ROUNDS}
-        label={(l) => l.snippet}
+        label={(l) => l.song || l.snippet}
         onPick={(l) => loadLyric(l.snippet, l.answer)}
       />
       <input
