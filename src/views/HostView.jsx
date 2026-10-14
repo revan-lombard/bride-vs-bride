@@ -63,6 +63,7 @@ export default function HostView({ state, connected }) {
       <OfflinePill connected={connected} label="Host offline" />
       <header className="flex items-center justify-between">
         <h1 className="text-xl font-bold">🎛️ Host Panel{IS_REHEARSAL && ' 🧪'}</h1>
+        <JoinQrButton url={guestUrl} />
         <span className={`text-xs ${connected ? 'text-green-400' : 'text-red-400'}`}>
           {connected ? '● live' : '● offline'}
         </span>
@@ -270,6 +271,33 @@ const SOUNDBOARD = [
   ['timesUp', '📯', 'horn'],
   ['whoosh', '💨', 'whoosh'],
 ]
+
+/**
+ * One tap to a full-screen join QR on the host's own phone — for late
+ * arrivals, or when the TV is showing a game instead of the lobby.
+ */
+function JoinQrButton({ url }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <button onClick={() => setOpen(true)} className="ml-auto mr-3 rounded-lg bg-white/15 px-3 py-1.5 text-sm font-bold">
+        📱 Join QR
+      </button>
+      {open && (
+        <div
+          onClick={() => setOpen(false)}
+          className="fixed inset-0 z-50 bg-white flex flex-col items-center justify-center gap-5 p-6 text-stage"
+        >
+          <h2 className="text-2xl font-extrabold text-center">{THEME.title}</h2>
+          <p className="text-lg">Scan to join the games 📱</p>
+          <QRCodeSVG value={url} size={Math.min(window.innerWidth - 48, 420)} />
+          <code className="text-xs break-all text-center">{url}</code>
+          <p className="text-sm text-stage/50">Tap anywhere to close</p>
+        </div>
+      )}
+    </>
+  )
+}
 
 function Section({ title, children }) {
   return (

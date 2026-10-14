@@ -44,7 +44,7 @@ Open `http://localhost:5173/bride-vs-bride/` — add `#/host` or `#/display` for
 
 Push to `main`. The GitHub Actions workflow builds and publishes to GitHub Pages automatically. One-time setup: repo **Settings → Pages → Source → GitHub Actions**.
 
-Live URL: `https://<your-username>.github.io/bride-vs-bride/`
+Live URL: **https://revan-lombard.github.io/bride-vs-bride/** (guests `#/`, host `#/host`, TV `#/display`)
 
 ## Pre-event survey
 
