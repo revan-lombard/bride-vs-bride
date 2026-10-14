@@ -1,53 +1,58 @@
 /**
- * Pre-event survey content — ✏️ EDIT THIS FILE with the real questions.
+ * Pre-event survey — sent with the invites at /#/survey. Answers build the
+ * Feud boards: on /#/survey-results, "Use as Feud round" turns a question's
+ * vote counts into a board (points = votes), so the questions are phrased
+ * Family Feud style ("Name…"). None repeat the hand-made FEUD_ROUNDS.
  *
- * These placeholder questions show the shape and tone; replace them before
- * sending the survey link with the invites. Rules of thumb:
+ * Rules of thumb if you edit:
  *  - 4–6 options per question (fixed multiple choice — free text scatters
  *    too widely with a small group to make good Feud boards)
  *  - Write options you expect to split the vote; a runaway winner makes a
  *    boring board
- *  - `id` must be unique and stable — responses are stored against it, so
- *    don't reuse or renumber ids after the survey has gone out
+ *  - `id` must be unique and stable — responses are stored against it (and
+ *    the option's position), so once the survey has gone out don't reuse
+ *    ids, reorder options or renumber. Add new questions with new ids.
+ *    (The original placeholders used q1–q6; these use s1–s8 so any test
+ *    responses to the placeholders are ignored rather than miscounted.)
  */
 
 export const SURVEY_QUESTIONS = [
   {
-    id: 'q1',
+    id: 's1',
     question: 'What will the brides argue about first as a married couple?',
     options: [
       'Whose turn it is to cook',
-      'The thermostat',
+      'The aircon',
       'Who hogs the duvet',
       'What to watch tonight',
       'Whose family to visit for Christmas',
     ],
   },
   {
-    id: 'q2',
-    question: 'What is the first thing a bride does when she wakes up?',
+    id: 's2',
+    question: 'Name the first thing a bride does when she wakes up',
     options: [
       'Checks her phone',
       'Hits snooze (three times)',
       'Makes coffee',
       'Cuddles the pets',
-      'Goes back to sleep',
+      'Rolls over and goes back to sleep',
     ],
   },
   {
-    id: 'q3',
-    question: 'What will the couple spend the most money on this year?',
+    id: 's3',
+    question: 'Name what the brides will spend the most money on this year',
     options: [
-      'The wedding itself',
-      'Takeaways',
       'The honeymoon',
+      'Takeaways',
       'Home improvements',
       'Spoiling the pets',
+      'Shoes and clothes',
     ],
   },
   {
-    id: 'q4',
-    question: 'Name something that always ends up in the bathroom that should not be there',
+    id: 's4',
+    question: 'Name something that always ends up in the bathroom but shouldn\'t',
     options: [
       'A coffee mug',
       'A phone',
@@ -57,25 +62,47 @@ export const SURVEY_QUESTIONS = [
     ],
   },
   {
-    id: 'q5',
-    question: 'What song will definitely get the whole wedding on the dance floor?',
+    id: 's5',
+    question: 'Name a song that will get everyone on the wedding dance floor',
     options: [
-      'A 2000s throwback',
-      'An Afrikaans treffer',
-      'A cheesy love ballad',
-      'Something with a group dance',
-      'Whatever the DJ is told to play by the brides',
+      'Dancing Queen',
+      'Kaptein (Span die Seile)',
+      'Jerusalema',
+      'Mr. Brightside',
+      'Uptown Funk',
     ],
   },
   {
-    id: 'q6',
-    question: 'What will the brides be doing at 21:00 on a Friday night in five years?',
+    id: 's6',
+    question: 'Name what the brides will be doing at 9pm on a Friday in five years',
     options: [
       'Asleep on the couch',
       'Hosting a braai',
       'Watching a series',
       'Out on a date night',
-      'Wrangling kids or pets to bed',
+      'Getting kids or pets to bed',
+    ],
+  },
+  {
+    id: 's7',
+    question: 'Name the best thing to bring to a kitchen tea',
+    options: [
+      'Wine',
+      'Tea towels',
+      'Something homemade',
+      'A recipe card with advice',
+      'A gift voucher',
+    ],
+  },
+  {
+    id: 's8',
+    question: 'Name something every married couple needs',
+    options: [
+      'A sense of humour',
+      'Patience',
+      'Two duvets',
+      'Date nights',
+      'A good braai',
     ],
   },
 ]

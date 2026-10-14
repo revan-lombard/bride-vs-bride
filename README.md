@@ -48,7 +48,7 @@ Live URL: **https://revan-lombard.github.io/bride-vs-bride/** (guests `#/`, host
 
 ## Pre-event survey
 
-1. Edit `src/lib/surveyQuestions.js` with the real questions (4–6 fixed options each) and push.
+1. The 8 questions live in `src/lib/surveyQuestions.js` (5 fixed options each, phrased Feud-style). Edit them before the link goes out. Once it's out, don't reorder options or reuse ids; add new questions with new ids.
 2. Send `/#/survey` out with the invites — it's themed as a teaser and never links to the game views.
 3. Watch responses roll in live at `/#/survey-results`. One response set per device; names optional.
 4. Before the event, tap **Close** on the results page so late submissions can't change locked-in boards.

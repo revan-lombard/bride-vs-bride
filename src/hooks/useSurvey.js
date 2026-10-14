@@ -13,9 +13,25 @@ export function useSurvey() {
   useEffect(() => {
     if (!isFirebaseConfigured) return
 
-    const unsubSurvey = onValue(ref(db, 'survey'), (snap) => {
-      setSurveyState(snap.val() || {})
+    // Read config and responses separately: the database rules grant read
+    // on survey/config and survey/responses, not on the /survey root itself,
+    // so a single listener on 'survey' is refused and the page never loads.
+    let config, responses
+    const publish = () => {
+      if (config !== undefined && responses !== undefined) setSurveyState({ config, responses })
+    }
+    const unsubConfig = onValue(ref(db, 'survey/config'), (snap) => {
+      config = snap.val() || {}
+      publish()
     })
+    const unsubResponses = onValue(ref(db, 'survey/responses'), (snap) => {
+      responses = snap.val() || {}
+      publish()
+    })
+    const unsubSurvey = () => {
+      unsubConfig()
+      unsubResponses()
+    }
     const unsubConn = onValue(ref(db, '.info/connected'), (snap) =>
       setConnected(snap.val() === true)
     )

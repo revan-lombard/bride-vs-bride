@@ -15,7 +15,7 @@ What's built, what's worth adding, and what would take the show to the next leve
 - QR code for the guest link (on the lobby screen and in the host panel)
 - Connection indicator on guest phones; full state reset button
 - Auto-deploy to GitHub Pages via Actions
-- **Pre-event survey** (built 2026-08-31): `/#/survey` invitee view + `/#/survey-results` host tally with open/close toggle and "Use as Feud round" (points = votes). Placeholder questions in `src/lib/surveyQuestions.js` still need replacing with the real ones.
+- **Pre-event survey** (built 2026-08-31): `/#/survey` invitee view + `/#/survey-results` host tally with open/close toggle and "Use as Feud round" (points = votes). 8 real Feud-style questions (ids s1–s8) in `src/lib/surveyQuestions.js`. Fixed 2026-10-14: the survey and results pages now read survey/config and survey/responses separately — a single read of the /survey root is denied by the database rules, which left both pages stuck on Loading.
 - **Content banks** (built 2026-08-31, roadmap #1): one-tap load buttons on the host panel for pre-written Feud rounds, poll presets and lyric rounds — all in `src/lib/rounds.js` (placeholders need replacing).
 - **Lyric game TV content** (built 2026-08-31, roadmap #2): snippet on the TV, host-triggered answer reveal, manual entry or bank load.
 - **Feud award button** (built 2026-08-31, roadmap #3): sums revealed points, one tap adds them to either team's score.
