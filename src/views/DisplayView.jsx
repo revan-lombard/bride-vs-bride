@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { GAMES, TEAMS, MAX_STRIKES } from '../lib/schema'
+import { GAMES, GAME_TITLES, TEAMS, MAX_STRIKES } from '../lib/schema'
 import { THEME } from '../lib/theme'
-import { playCue } from '../lib/sounds'
+import { playCue, unlockAudio, isAudioUnlocked, isMuted, setMuted } from '../lib/sounds'
+import { useGameSounds } from '../hooks/useGameSounds'
+import BingoDisplay from '../components/BingoDisplay'
+import Confetti from '../components/Confetti'
 
 /**
  * The TV / projector view (16:9). Read-only — it just renders the shared
@@ -10,18 +13,23 @@ import { playCue } from '../lib/sounds'
  */
 export default function DisplayView({ state }) {
   useSoundCues(state?.soundCue)
+  useGameSounds(state)
+  const [audioOn, setAudioOn] = useState(isAudioUnlocked)
   // Karaoke audio: filename -> object URL, picked from a local folder once.
   // Lives here (not in LyricScreen) so switching games doesn't drop it.
   const [audioFiles, setAudioFiles] = useState({})
 
   if (!state) return <Centered>Connecting…</Centered>
 
+  // Browsers block audio until the page is clicked once.
+  const enableAudio = () => !audioOn && unlockAudio().then(setAudioOn)
+
   // Feud/Noot: guests pick on their phones after buzzing, so the board must
   // stay visible — the buzz shows as a banner instead of a full takeover.
   const compactBuzz = [GAMES.FEUD, GAMES.NOOT].includes(state.currentGame)
 
   return (
-    <div className="h-full flex flex-col p-8 gap-6 overflow-hidden">
+    <div className="h-full flex flex-col p-8 gap-6 overflow-hidden" onClick={enableAudio}>
       <Scoreboard scores={state.scores} />
       <TimerBanner timer={state.timer} />
 
@@ -44,10 +52,15 @@ export default function DisplayView({ state }) {
           />
         )}
 
+        {state.currentGame === GAMES.BINGO && <BingoDisplay bingoState={state.bingoState} />}
+
         {state.currentGame === GAMES.WINNER && <WinnerScreen scores={state.scores} />}
 
         <BuzzOverlay buzzerState={state.buzzerState} compact={compactBuzz} />
       </main>
+
+      <GameSplash game={state.currentGame} />
+      <SoundToggle audioOn={audioOn} />
     </div>
   )
 }
@@ -62,9 +75,10 @@ function TimerBanner({ timer }) {
     return () => clearInterval(tick)
   }, [timer?.endsAt])
 
-  if (!timer?.endsAt) return null
-  const remaining = Math.ceil((timer.endsAt - now) / 1000)
-  if (remaining <= -4) return null
+  const remaining = timer?.endsAt ? Math.ceil((timer.endsAt - now) / 1000) : null
+  useTimerSounds(timer?.endsAt, remaining)
+
+  if (remaining === null || remaining <= -4) return null
 
   return (
     <div className="text-center">
@@ -83,6 +97,18 @@ function TimerBanner({ timer }) {
       )}
     </div>
   )
+}
+
+/** Tick for the last five seconds, air horn at zero. Skips whatever was on screen at load. */
+function useTimerSounds(endsAt, remaining) {
+  const last = useRef({ endsAt: undefined, remaining: null })
+  useEffect(() => {
+    const prev = last.current
+    last.current = { endsAt, remaining }
+    if (prev.endsAt === undefined || prev.endsAt !== endsAt || remaining === prev.remaining) return
+    if (remaining > 0 && remaining <= 5) playCue('tick')
+    if (remaining === 0) playCue('timesUp')
+  }, [endsAt, remaining])
 }
 
 /** Final standings with CSS confetti — switch here to end the show. */
@@ -112,35 +138,6 @@ function WinnerScreen({ scores }) {
   )
 }
 
-function Confetti() {
-  // Static-per-mount confetti field; pure CSS animation, no library.
-  const pieces = Array.from({ length: 80 }, (_, i) => ({
-    left: `${(i * 37) % 100}%`,
-    delay: `${(i % 20) * 0.25}s`,
-    duration: `${3 + (i % 5)}s`,
-    color: ['#f472b6', '#a78bfa', '#fbbf24', '#34d399', '#f87171'][i % 5],
-    size: 8 + (i % 3) * 4,
-  }))
-  return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden">
-      {pieces.map((p, i) => (
-        <span
-          key={i}
-          className="absolute top-[-5%] animate-confetti-fall"
-          style={{
-            left: p.left,
-            width: p.size,
-            height: p.size,
-            backgroundColor: p.color,
-            animationDelay: p.delay,
-            animationDuration: p.duration,
-          }}
-        />
-      ))}
-    </div>
-  )
-}
-
 const toUrlMap = (files) =>
   Object.fromEntries([...files].map((f) => [f.name, URL.createObjectURL(f)]))
 
@@ -166,10 +163,106 @@ function Scoreboard({ scores }) {
           }`}
         >
           <div className="text-lg tracking-widest uppercase text-white/80">{t.label}</div>
-          <div className="text-7xl font-extrabold tabular-nums">{scores?.[t.id] ?? 0}</div>
+          <ScoreValue value={scores?.[t.id] ?? 0} />
         </div>
       ))}
     </div>
+  )
+}
+
+/** Score that counts up/down to its new value, with a floating "+N". */
+function ScoreValue({ value }) {
+  const [shown, setShown] = useState(value)
+  const [pop, setPop] = useState(null) // { delta, id }
+  const shownRef = useRef(value)
+
+  useEffect(() => {
+    const from = shownRef.current
+    if (from === value) return
+    const t0 = performance.now()
+    let first = true
+    let raf = requestAnimationFrame(function step(now) {
+      if (first) setPop({ delta: value - from, id: t0 })
+      first = false
+      const k = Math.min(Math.max(now - t0, 0) / 800, 1)
+      const v = Math.round(from + (value - from) * (1 - (1 - k) ** 3))
+      shownRef.current = v
+      setShown(v)
+      if (k < 1) raf = requestAnimationFrame(step)
+    })
+    const clear = setTimeout(() => setPop(null), 1700)
+    return () => {
+      cancelAnimationFrame(raf)
+      clearTimeout(clear)
+    }
+  }, [value])
+
+  return (
+    <div className="relative">
+      <div key={pop?.id} className={`text-7xl font-extrabold tabular-nums ${pop ? 'animate-bump' : ''}`}>
+        {shown}
+      </div>
+      {pop && (
+        <span
+          key={`p${pop.id}`}
+          className={`absolute left-1/2 top-0 text-5xl font-extrabold animate-float-up ${
+            pop.delta > 0 ? 'text-yellow-300' : 'text-red-300'
+          }`}
+        >
+          {pop.delta > 0 ? `+${pop.delta}` : pop.delta}
+        </span>
+      )}
+    </div>
+  )
+}
+
+/** Big animated title when the host switches games. */
+function GameSplash({ game }) {
+  const [splash, setSplash] = useState(null)
+  const prev = useRef(game)
+
+  useEffect(() => {
+    if (prev.current === game) return
+    prev.current = game
+    const show = setTimeout(() => setSplash({ game, id: Date.now() }), 0)
+    const hide = setTimeout(() => setSplash(null), 2200)
+    return () => {
+      clearTimeout(show)
+      clearTimeout(hide)
+    }
+  }, [game])
+
+  if (!splash || game === GAMES.LOBBY) return null
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-stage/85 backdrop-blur-sm pointer-events-none">
+      <h1 key={splash.id} className="text-9xl font-extrabold text-center animate-splash">
+        {GAME_TITLES[splash.game] || splash.game}
+      </h1>
+    </div>
+  )
+}
+
+/** "Click to enable sound" until audio is unlocked, then a small mute button. */
+function SoundToggle({ audioOn }) {
+  const [muted, setMutedState] = useState(isMuted)
+  if (!audioOn) {
+    return (
+      <div className="fixed bottom-4 right-4 z-50 bg-yellow-400 text-stage font-bold rounded-full px-5 py-3 text-xl animate-buzz-pulse cursor-pointer">
+        🔇 Click anywhere to turn on sound
+      </div>
+    )
+  }
+  return (
+    <button
+      onClick={() => {
+        setMuted(!muted)
+        setMutedState(!muted)
+      }}
+      className="fixed bottom-4 right-4 z-50 rounded-full bg-white/10 px-3 py-2 text-xl opacity-40 hover:opacity-100"
+      title={muted ? 'Unmute' : 'Mute'}
+    >
+      {muted ? '🔇' : '🔊'}
+    </button>
   )
 }
 

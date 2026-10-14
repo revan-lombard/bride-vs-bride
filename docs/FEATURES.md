@@ -21,6 +21,10 @@ What's built, what's worth adding, and what would take the show to the next leve
 - **Feud award button** (built 2026-08-31, roadmap #3): sums revealed points, one tap adds them to either team's score.
 - **Theming** (built 2026-08-31, roadmap #14): brides' names + event title in `src/lib/theme.js` (still placeholder names) — flows into team labels, lobby, and join screen.
 
+- **Bridal Bingo** (built 2026-10-14): 75-ball B-R-I-D-E bingo. Per-phone cards derived from player id + round seed (nothing stored per player), self-marking with only-called-numbers validation, auto-lit BINGO button, race-safe first claim, auto-scored patterns (line / two lines / corners / full house) with continue-for-bigger-pattern. TV tumbler animation with call phrases, called-numbers board and a winner takeover showing the winning card.
+- **Sound everywhere** (built 2026-10-14): 17 synthesized cues; the TV derives sounds from state changes so every buzz, reveal, strike, score change, timer tick and win is heard without host taps. Click-to-enable-sound prompt + mute on the TV, tap sounds/haptics + mute on phones, expanded host soundboard.
+- **TV polish** (built 2026-10-14, roadmap #15 + #17): animated score count-up with floating "+N", and a title splash when the host switches games.
+
 ---
 
 ## 📋 Built: pre-event Feud survey (multiple choice)

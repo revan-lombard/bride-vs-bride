@@ -8,6 +8,7 @@ import {
 } from 'firebase/database'
 import { db } from './firebase'
 import { DEFAULT_STATE } from './schema'
+import { nextBall, PATTERNS } from './bingo'
 
 const game = (path = '') => ref(db, path ? `game/${path}` : 'game')
 
@@ -117,7 +118,7 @@ export const castVote = (player, choice) =>
 /**
  * The buzz winner picks an answer on their phone. Auto-matched against the
  * board (options come from the same fixed list, so text match is exact):
- * a hit reveals the answer, plays the ding and adds its points straight to
+ * a hit reveals the answer (the TV plays the ding) and adds its points straight to
  * the guesser's team; a miss adds a strike. Buzzers lock until the host
  * re-arms; a revealed answer picked again counts as a miss, Feud style.
  */
@@ -134,7 +135,6 @@ export function submitFeudGuess(player, choice, feudState) {
       correct,
     },
     buzzerState: { isUnlocked: false, firstBuzzed: null },
-    soundCue: { name: correct ? 'correct' : 'strike', ts: serverTimestamp() },
   }
   if (correct) {
     updates[`feudState/answers/${idx}/revealed`] = true
@@ -173,7 +173,7 @@ export const revealNootAnswer = (revealed = true) =>
   set(game('nootState/revealed'), revealed)
 
 /**
- * Same phone-pick flow as Feud: a hit reveals the song, plays the fanfare
+ * Same phone-pick flow as Feud: a hit reveals the song (fanfare on the TV)
  * and auto-awards the round's points; a miss greys that option out for the
  * next buzz winner. Buzzers relock either way until the host re-arms.
  */
@@ -187,7 +187,6 @@ export function submitNootGuess(player, choice, nootState) {
       correct,
     },
     buzzerState: { isUnlocked: false, firstBuzzed: null },
-    soundCue: { name: correct ? 'fanfare' : 'strike', ts: serverTimestamp() },
   }
   if (correct) {
     updates['nootState/revealed'] = true
@@ -200,3 +199,68 @@ export function submitNootGuess(player, choice, nootState) {
   }
   return update(game(), updates)
 }
+
+/* ------------------------------------------------------------------ */
+/* Bridal Bingo                                                        */
+/* ------------------------------------------------------------------ */
+
+/** Deal everyone a fresh card (new seed) and empty the tumbler. */
+export const newBingoGame = (pattern = 'line') =>
+  set(game('bingoState'), {
+    seed: Math.random().toString(36).slice(2, 10),
+    drawn: [],
+    pattern,
+    winner: null,
+    winners: [],
+  })
+
+export const setBingoPattern = (pattern) => set(game('bingoState/pattern'), pattern)
+
+/**
+ * Draw one ball. A transaction so a double-tap (or auto-draw racing a
+ * manual tap) can never draw the same ball twice. Paused while a bingo
+ * claim is on screen — the host continues or deals a new game first.
+ */
+export const drawBingoBall = () =>
+  runTransaction(game('bingoState'), (current) => {
+    if (!current?.seed || current.winner) return undefined
+    const drawn = current.drawn || []
+    const n = nextBall(drawn)
+    if (n === null) return undefined
+    return { ...current, drawn: [...drawn, n] }
+  })
+
+/**
+ * Guest shouts BINGO. The phone only offers the button once its marked
+ * (and genuinely called) squares complete the pattern, so the claim is
+ * already verified; the transaction makes sure only the first one counts.
+ * Points for the pattern go straight to the claimer's team.
+ */
+export async function claimBingo(player, cells, bingoState) {
+  const pattern = bingoState.pattern || 'line'
+  const points = PATTERNS[pattern]?.points || 0
+  const result = await runTransaction(game('bingoState/winner'), (current) => {
+    if (current) return undefined
+    return {
+      playerId: player.id,
+      userName: player.userName,
+      team: player.team,
+      pattern,
+      cells,
+      points,
+      seed: bingoState.seed,
+    }
+  })
+  if (result.committed && points) {
+    await update(game(), { [`scores/${player.team}`]: increment(points) })
+  }
+  return result.committed
+}
+
+/** Keep playing the same cards for a bigger pattern (line → full house). */
+export const continueBingo = (bingoState, nextPattern) =>
+  update(game('bingoState'), {
+    winners: [...(bingoState.winners || []), bingoState.winner].filter(Boolean),
+    winner: null,
+    pattern: nextPattern,
+  })

@@ -12,7 +12,7 @@ A real-time multi-game web app for a bridal kitchen tea. Guests scan a QR code a
 | `/#/survey` | Invitees (pre-event) | Multiple-choice survey sent with the invites — answers build the Feud boards |
 | `/#/survey-results` | Host | Live survey tallies, open/close toggle, one-tap "Use as Feud round" |
 
-Games: **LOBBY** (join screen), **FEUD** (Family Feud board with reveals + strikes), **POLL** (live voting with animated results), **LYRIC** (finish-the-lyric buzzer round).
+Games: **LOBBY** (join screen), **FEUD** (Family Feud board with reveals + strikes), **POLL** (live voting with animated results), **LYRIC** (finish-the-lyric buzzer round), **NOOT** (Noot vir Noot guess-the-song), **BINGO** (Bridal Bingo with a tumbler on the TV), **WINNER** (final standings + confetti).
 
 ## Stack
 
@@ -63,9 +63,25 @@ The Lyric game can play the actual song: the track plays with vocals, the vocals
 2. **Keep the mp3s in a folder on the display laptop** — they are never committed or deployed (copyrighted audio must not go on a public site). `.gitignore` blocks mp3s as a safety net.
 3. **On the day**: the first karaoke round shows a "load the music folder" button on the TV — click it once and select all the prepared mp3s. From then on the host's ▶️ Play on TV button runs each round end-to-end.
 
+## Bridal Bingo
+
+75-ball bingo with the columns spelled **B-R-I-D-E**. Every phone gets its own 5×5 card (💍 free centre square).
+
+1. Switch to **BINGO** on the host panel, pick the pattern (One line / Two lines / Four corners / Full house) and tap **Deal cards & start**.
+2. Tap **🎱 Draw ball** (or turn on **Auto-draw**, a ball every 12s — keep the host screen awake). The TV tumbler spins, rattles and drops the ball, with its bingo call underneath; phones show "just called" at the same moment.
+3. Guests tap the numbers on their own card. Only numbers that were really called will mark — tap too early and the square shakes. If they miss one, it's on them!
+4. When their marked squares complete the pattern, the **BINGO!** button lights up. The first claim wins: the TV goes full-screen with their card, confetti and applause, and the pattern's points go to their team automatically.
+5. Tap **Continue for Full house** (etc.) to keep playing the same cards for a bigger pattern, or **New cards** to deal again.
+
+Pattern points are in `PATTERNS` in `src/lib/bingo.js`.
+
+## Sound effects
+
+Everything is synthesized in the browser (`src/lib/sounds.js`) — no audio files. The TV plays sounds automatically from game events: game switches (whoosh + title splash), buzzes, Feud reveals and strikes, Noot answers, lyric reveals, poll result drumrolls, score changes (with an animated count-up), the timer's last five seconds and a horn at zero, the bingo tumbler and ball drop, bingo wins and the winner screen's applause. The host's soundboard has extras (drumroll, applause, horn…). Phones play quiet tap sounds and vibrate (Android) for their own buzzes, votes and bingo marks; each device has a 🔊/🔇 toggle.
+
 ## Running the show (day-of checklist)
 
-1. Open `/#/display` on the TV and **click the page once** (unlocks browser audio for sound cues).
+1. Open `/#/display` on the TV and **click the page once** — a yellow "click to turn on sound" prompt shows until you do (browsers block audio until then).
 2. Open `/#/host` on your phone/laptop.
 3. Guests scan the QR code shown in the LOBBY screen (or from the host panel).
 4. Switch games from the host panel — every phone follows automatically.

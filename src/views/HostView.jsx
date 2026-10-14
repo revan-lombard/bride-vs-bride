@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { GAMES, TEAMS, MAX_STRIKES, BUZZER_GAMES } from '../lib/schema'
 import { THEME } from '../lib/theme'
@@ -20,11 +20,19 @@ import {
   loadNootRound,
   triggerNootPlayback,
   revealNootAnswer,
+  newBingoGame,
+  setBingoPattern,
+  drawBingoBall,
+  continueBingo,
   startTimer,
   clearTimer,
   triggerSound,
   resetGame,
 } from '../lib/gameActions'
+import { PATTERNS, BINGO_MAX, ballLabel } from '../lib/bingo'
+import { useBingoDraw } from '../hooks/useBingoDraw'
+import { CUE_NAMES } from '../lib/sounds'
+import BingoBall from '../components/BingoBall'
 
 /**
  * Host control panel — phone/laptop friendly. Everything is a direct write
@@ -117,6 +125,12 @@ export default function HostView({ state, connected }) {
         </Section>
       )}
 
+      {state.currentGame === GAMES.BINGO && (
+        <Section title="Bridal Bingo">
+          <BingoControls bingoState={state.bingoState} />
+        </Section>
+      )}
+
       <Section title="Timer (on the TV)">
         <div className="grid grid-cols-4 gap-2">
           {[30, 60, 90].map((s) => (
@@ -139,22 +153,22 @@ export default function HostView({ state, connected }) {
 
       <Section title="Sounds">
         <div className="grid grid-cols-4 gap-2">
-          {[
-            ['buzz', '🔔'],
-            ['correct', '✅'],
-            ['strike', '❌'],
-            ['fanfare', '🎺'],
-          ].map(([name, icon]) => (
+          {SOUNDBOARD.filter(([name]) => CUE_NAMES.includes(name)).map(([name, icon, label]) => (
             <button
               key={name}
               onClick={() => triggerSound(name)}
-              className="bg-white/15 rounded-lg py-3 text-xl"
+              className="bg-white/15 rounded-lg py-2 flex flex-col items-center"
               title={name}
             >
-              {icon}
+              <span className="text-xl">{icon}</span>
+              <span className="text-[10px] text-white/60">{label}</span>
             </button>
           ))}
         </div>
+        <p className="text-xs text-white/40">
+          Buzzes, reveals, strikes, scores, timers and bingo play their sounds on the TV automatically —
+          these are extras.
+        </p>
       </Section>
 
       <details className="group">
@@ -177,6 +191,17 @@ export default function HostView({ state, connected }) {
     </div>
   )
 }
+
+const SOUNDBOARD = [
+  ['buzz', '🔔', 'buzz'],
+  ['correct', '✅', 'ding'],
+  ['strike', '❌', 'wrong'],
+  ['fanfare', '🎺', 'fanfare'],
+  ['drumroll', '🥁', 'drumroll'],
+  ['winner', '👏', 'applause'],
+  ['timesUp', '📯', 'horn'],
+  ['whoosh', '💨', 'whoosh'],
+]
 
 function Section({ title, children }) {
   return (
@@ -484,6 +509,118 @@ function NootControls({ nootState }) {
           </button>
         </div>
       )}
+    </div>
+  )
+}
+
+function BingoControls({ bingoState }) {
+  const { seed, drawn = [], pattern = 'line', winner, winners = [] } = bingoState || {}
+  const { spinning } = useBingoDraw(bingoState)
+  const [auto, setAuto] = useState(false)
+  const done = drawn.length >= BINGO_MAX
+  const autoOn = auto && Boolean(seed) && !winner && !done
+
+  // Auto-draw: a new ball every 12s (spin + time to mark) until someone
+  // claims. Runs on this device, so keep the host screen awake.
+  useEffect(() => {
+    if (!autoOn) return
+    const t = setInterval(drawBingoBall, 12000)
+    return () => clearInterval(t)
+  }, [autoOn])
+
+  const deal = () => {
+    if (seed && drawn.length && !winner && !confirm('Deal new cards? Everyone gets a fresh card.')) return
+    setAuto(false)
+    newBingoGame(pattern)
+  }
+
+  const pastPatterns = new Set([...winners.map((w) => w?.pattern), winner?.pattern])
+  const nextPatterns = Object.values(PATTERNS).filter((p) => !pastPatterns.has(p.id))
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-4 gap-2">
+        {Object.values(PATTERNS).map((p) => (
+          <button
+            key={p.id}
+            onClick={() => setBingoPattern(p.id)}
+            className={`rounded-lg py-2 text-xs font-bold ${
+              pattern === p.id ? 'bg-white text-stage' : 'bg-white/15'
+            }`}
+          >
+            {p.label}
+            <div className="font-normal opacity-70">{p.points} pts</div>
+          </button>
+        ))}
+      </div>
+
+      {!seed ? (
+        <button onClick={deal} className="w-full rounded-lg bg-green-700 py-4 text-lg font-bold">
+          🃏 Deal cards &amp; start
+        </button>
+      ) : (
+        <>
+          {winner ? (
+            <div className="rounded-xl bg-yellow-300 text-stage p-3 space-y-2">
+              <p className="text-center font-bold">
+                🎉 {winner.userName} ({TEAMS[winner.team]?.label}) — {PATTERNS[winner.pattern]?.label}!
+                <br />
+                <span className="text-sm font-normal">+{winner.points} points added automatically</span>
+              </p>
+              {nextPatterns.length > 0 && (
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {nextPatterns.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => continueBingo(bingoState, p.id)}
+                      className="rounded-lg bg-stage text-white px-3 py-2 text-sm font-bold"
+                    >
+                      ▶️ Continue for {p.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                onClick={drawBingoBall}
+                disabled={spinning || done}
+                className="flex-[2] rounded-lg bg-green-700 py-4 text-lg font-bold disabled:opacity-40"
+              >
+                {done ? 'All balls drawn' : spinning ? '🌀 Spinning…' : '🎱 Draw ball'}
+              </button>
+              <button
+                onClick={() => setAuto(!auto)}
+                className={`flex-1 rounded-lg py-4 text-sm font-bold ${autoOn ? 'bg-yellow-300 text-stage' : 'bg-white/15'}`}
+              >
+                {autoOn ? '⏸ Auto on' : '⏩ Auto-draw'}
+              </button>
+            </div>
+          )}
+
+          <div className="bg-white/10 rounded-lg p-3 space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span>
+                Ball {drawn.length} / {BINGO_MAX}
+                {drawn.length > 0 && ` · last: ${ballLabel(drawn[drawn.length - 1])}`}
+              </span>
+              <button onClick={deal} className="rounded bg-white/15 px-2 py-1 text-xs font-bold">
+                🃏 New cards
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {[...drawn].reverse().map((n) => (
+                <BingoBall key={n} number={n} size={34} />
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+      <p className="text-xs text-white/40">
+        Guests tap the called numbers on their own card; the BINGO button only lights up for a real win,
+        and the first claim scores automatically.
+      </p>
     </div>
   )
 }

@@ -1,7 +1,40 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { GAMES, TEAMS, loadPlayer, savePlayer } from '../lib/schema'
 import { THEME } from '../lib/theme'
-import { buzz, castVote, submitFeudGuess, submitNootGuess } from '../lib/gameActions'
+import {
+  buzz as sendBuzz,
+  castVote,
+  submitFeudGuess,
+  submitNootGuess,
+  claimBingo,
+} from '../lib/gameActions'
+import {
+  BINGO_LETTERS,
+  BALL_COLORS,
+  PATTERNS,
+  FREE,
+  ballLabel,
+  makeCard,
+  goodCells,
+  winningCells,
+  loadMarks,
+  saveMarks,
+} from '../lib/bingo'
+import { useBingoDraw } from '../hooks/useBingoDraw'
+import { playCue, vibrate, isMuted, setMuted, unlockAudio } from '../lib/sounds'
+import BingoBall from '../components/BingoBall'
+
+/** Buzz with feedback: a tap click, then a happy chirp + buzz if you won. */
+async function buzz(player) {
+  playCue('tap')
+  vibrate(30)
+  const won = await sendBuzz(player)
+  if (won) {
+    playCue('mark')
+    vibrate([120, 60, 120])
+  }
+  return won
+}
 
 /**
  * The phone-in-hand view. Guests join once (name + team, persisted in
@@ -22,10 +55,13 @@ export default function GuestView({ state, connected }) {
           <div className="font-bold">{player.userName}</div>
           <div className="text-xs text-white/80">{TEAMS[player.team].label}</div>
         </div>
-        <span
-          className={`h-3 w-3 rounded-full ${connected ? 'bg-green-400' : 'bg-red-400'}`}
-          title={connected ? 'Connected' : 'Reconnecting…'}
-        />
+        <div className="flex items-center gap-3">
+          <MuteButton />
+          <span
+            className={`h-3 w-3 rounded-full ${connected ? 'bg-green-400' : 'bg-red-400'}`}
+            title={connected ? 'Connected' : 'Reconnecting…'}
+          />
+        </div>
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center p-6">
@@ -48,6 +84,9 @@ export default function GuestView({ state, connected }) {
             nootState={state.nootState}
             buzzerState={state.buzzerState}
           />
+        )}
+        {state.currentGame === GAMES.BINGO && (
+          <BingoPad player={player} bingoState={state.bingoState} />
         )}
         {state.currentGame === GAMES.WINNER && (
           <Splash text="🏆 Final scores are on the TV — thanks for playing! 🥂" />
@@ -163,7 +202,11 @@ function FeudPad({ player, feudState, buzzerState }) {
         {options.map((option) => (
           <button
             key={option}
-            onClick={() => iWon && submitFeudGuess(player, option, feudState)}
+            onClick={() => {
+              if (!iWon) return
+              playCue('tap')
+              submitFeudGuess(player, option, feudState)
+            }}
             disabled={!iWon || revealed.has(option)}
             className={`w-full rounded-xl px-4 py-3 text-left font-bold transition ${
               revealed.has(option)
@@ -224,9 +267,11 @@ function NootPad({ player, nootState, buzzerState }) {
           return (
             <button
               key={option}
-              onClick={() =>
-                iWon && !revealed && submitNootGuess(player, option, nootState)
-              }
+              onClick={() => {
+                if (!iWon || revealed) return
+                playCue('tap')
+                submitNootGuess(player, option, nootState)
+              }}
               disabled={!iWon || revealed || isWrong}
               className={`w-full rounded-xl px-4 py-3 text-left font-bold transition ${
                 isCorrectRevealed
@@ -281,7 +326,12 @@ function VotePad({ player, pollState }) {
       {(options || []).map((option) => (
         <button
           key={option}
-          onClick={() => isOpen && castVote(player, option)}
+          onClick={() => {
+            if (!isOpen) return
+            playCue('tap')
+            vibrate(20)
+            castVote(player, option)
+          }}
           disabled={!isOpen}
           className={`w-full rounded-xl py-4 text-lg font-bold transition ${
             myVote === option
@@ -295,6 +345,171 @@ function VotePad({ player, pollState }) {
       {!isOpen && <p className="text-white/60 text-sm">Voting is closed</p>}
       {myVote && isOpen && (
         <p className="text-white/60 text-sm">You can change your vote until it closes</p>
+      )}
+    </div>
+  )
+}
+
+function MuteButton() {
+  const [muted, setMutedState] = useState(isMuted)
+  return (
+    <button
+      onClick={() => {
+        unlockAudio()
+        setMuted(!muted)
+        setMutedState(!muted)
+      }}
+      className="text-lg opacity-80"
+      title={muted ? 'Sound off' : 'Sound on'}
+    >
+      {muted ? '🔇' : '🔊'}
+    </button>
+  )
+}
+
+/**
+ * Bridal Bingo card. Guests listen/watch for the balls and tap their own
+ * squares — only numbers that have really been called will mark. When the
+ * marked squares make the pattern, the BINGO button lights up.
+ */
+function BingoPad({ player, bingoState }) {
+  const { seed = '', pattern = 'line', winner } = bingoState || {}
+  const { spinning, visible, current } = useBingoDraw(bingoState)
+  const card = useMemo(() => (seed ? makeCard(player.id, seed) : null), [player.id, seed])
+  const [store, setStore] = useState(() => ({ seed, marks: loadMarks(seed) }))
+  const marks = store.seed === seed ? store.marks : loadMarks(seed)
+  const [shake, setShake] = useState(null) // cell index that was tapped too early
+  const [toast, setToast] = useState('')
+  const [claiming, setClaiming] = useState(false)
+
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(''), 1800)
+    return () => clearTimeout(t)
+  }, [toast])
+
+  if (!card) {
+    return <Splash text="🎱 Bridal Bingo — the host is dealing the cards…" />
+  }
+
+  const called = new Set(visible)
+  const good = goodCells(card, marks, visible)
+  const win = winner ? null : winningCells(pattern, good)
+  const iWon = winner?.playerId === player.id
+  const winCells = new Set(iWon ? winner.cells || [] : [])
+  const pat = PATTERNS[pattern] || PATTERNS.line
+
+  const tapCell = (i) => {
+    const n = card[i]
+    if (n === FREE) return
+    let next
+    if (marks.includes(i)) {
+      next = marks.filter((m) => m !== i)
+      playCue('tap')
+    } else if (!called.has(n)) {
+      setShake(i)
+      setTimeout(() => setShake(null), 400)
+      setToast(`${ballLabel(n)} hasn't been called yet!`)
+      playCue('nope')
+      vibrate(80)
+      return
+    } else {
+      next = [...marks, i]
+      playCue('mark')
+      vibrate(25)
+    }
+    setStore({ seed, marks: next })
+    saveMarks(seed, next)
+  }
+
+  const shoutBingo = async () => {
+    if (!win || claiming) return
+    setClaiming(true)
+    const ok = await claimBingo(player, win, bingoState)
+    setClaiming(false)
+    if (ok) {
+      playCue('bingo')
+      vibrate([200, 80, 200, 80, 400])
+    } else {
+      setToast('So close — someone beat you to it!')
+    }
+  }
+
+  return (
+    <div className="w-full max-w-sm space-y-3">
+      <div className="flex items-center justify-between gap-3 min-h-16">
+        <div className="text-sm">
+          <div className="text-white/60">Playing for</div>
+          <div className="font-bold">
+            {pat.label} · {pat.points} pts
+          </div>
+        </div>
+        {spinning ? (
+          <div className="text-lg font-bold animate-buzz-pulse">🌀 Drawing…</div>
+        ) : current ? (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-white/60 text-right leading-tight">
+              Just
+              <br />
+              called
+            </span>
+            <BingoBall key={current} number={current} size={60} className="animate-ball-pop" />
+          </div>
+        ) : (
+          <div className="text-sm text-white/60">Watch the TV 📺</div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-5 gap-1.5">
+        {BINGO_LETTERS.map((l) => (
+          <div key={l} className="text-center text-2xl font-extrabold" style={{ color: BALL_COLORS[l] }}>
+            {l}
+          </div>
+        ))}
+        {card.map((n, i) => {
+          const marked = n === FREE || marks.includes(i)
+          const color = BALL_COLORS[BINGO_LETTERS[i % 5]]
+          return (
+            <button
+              key={i}
+              onClick={() => tapCell(i)}
+              className={`aspect-square rounded-xl text-2xl font-extrabold flex items-center justify-center select-none transition active:scale-90 ${
+                shake === i ? 'animate-shake' : ''
+              } ${winCells.has(i) ? 'ring-4 ring-yellow-300' : ''} ${
+                marked ? 'text-stage' : 'bg-white/10'
+              }`}
+              style={marked ? { backgroundColor: n === FREE ? '#fde68a' : color } : undefined}
+            >
+              {n === FREE ? '💍' : n}
+            </button>
+          )
+        })}
+      </div>
+
+      <div className="h-6 text-center text-sm text-yellow-300">{toast}</div>
+
+      {winner ? (
+        <div
+          className={`rounded-2xl p-4 text-center font-bold ${
+            iWon ? 'bg-yellow-300 text-stage animate-buzz-pulse' : 'bg-white/10'
+          }`}
+        >
+          {iWon
+            ? `🎉 BINGO! +${winner.points} for ${TEAMS[player.team].label}!`
+            : `🎉 ${winner.userName} got BINGO! Next round coming up…`}
+        </div>
+      ) : (
+        <button
+          onClick={shoutBingo}
+          disabled={!win || claiming}
+          className={`w-full h-20 rounded-2xl font-extrabold transition select-none ${
+            win
+              ? 'bg-yellow-300 text-stage text-3xl animate-buzz-pulse active:scale-95'
+              : 'bg-white/10 text-white/30 text-lg'
+          }`}
+        >
+          {win ? 'BINGO! 🎉' : 'Tap numbers as they’re called'}
+        </button>
       )}
     </div>
   )

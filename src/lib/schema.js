@@ -11,7 +11,19 @@ export const GAMES = {
   POLL: 'POLL',
   LYRIC: 'LYRIC',
   NOOT: 'NOOT',
+  BINGO: 'BINGO',
   WINNER: 'WINNER',
+}
+
+/** TV splash titles shown when the host switches games. */
+export const GAME_TITLES = {
+  LOBBY: '🥂 Welcome!',
+  FEUD: '📋 Family Feud',
+  POLL: '🗳️ Live Poll',
+  LYRIC: '🎵 Finish the Lyric',
+  NOOT: '🎶 Noot vir Noot',
+  BINGO: '🎱 Bridal Bingo',
+  WINNER: '🏆 And the winner is…',
 }
 
 /** Which games use the buzzers (drives the host panel's buzzer section). */
@@ -84,11 +96,24 @@ export const DEFAULT_STATE = {
     playback: null,
     lastGuess: null,
   },
+  // Bridal Bingo: 75 balls under B-R-I-D-E. Cards are derived from
+  // (playerId, seed) so nothing per-player is stored; marks live on phones.
+  bingoState: {
+    seed: '', // empty = no game dealt yet
+    drawn: [], // ball numbers in draw order
+    pattern: 'line', // key of PATTERNS in lib/bingo.js
+    // First valid claim: { playerId, userName, team, pattern, cells, points }
+    winner: null,
+    // Earlier winners this game (line → two lines → full house…)
+    winners: [],
+  },
   // Countdown shown big on the TV. { duration, endsAt } — visual only,
   // the host still locks buzzers / closes polls themselves.
   timer: null,
-  // Host-triggered one-shot audio cue. Display view plays it when the
-  // timestamp changes. { name: 'buzz'|'correct'|'strike'|'fanfare', ts }
+  // Host-triggered one-shot audio cue (the soundboard). Display view plays
+  // it when the timestamp changes. { name, ts } — any cue in lib/sounds.js.
+  // Game events (buzzes, reveals, scores…) get their sounds automatically
+  // from state changes on the display, so they don't go through here.
   soundCue: null,
 }
 
