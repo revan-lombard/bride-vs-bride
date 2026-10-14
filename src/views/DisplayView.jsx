@@ -10,6 +10,7 @@ import { ReactionLayer } from '../components/Reactions'
 import BingoDisplay from '../components/BingoDisplay'
 import NewlywedDisplay from '../components/NewlywedDisplay'
 import WinnerDisplay from '../components/WinnerDisplay'
+import { CheerDisplay } from '../components/Cheer'
 import { useWakeLock } from '../hooks/useWakeLock'
 
 /**
@@ -60,6 +61,7 @@ export default function DisplayView({ state, connected }) {
 
         {state.currentGame === GAMES.BINGO && <BingoDisplay bingoState={state.bingoState} />}
         {state.currentGame === GAMES.NEWLYWED && <NewlywedDisplay nw={state.newlywedState} />}
+        {state.currentGame === GAMES.CHEER && <CheerDisplay cheerState={state.cheerState} />}
 
         {state.currentGame === GAMES.WINNER && <WinnerDisplay scores={state.scores} players={state.players} />}
 

@@ -36,6 +36,8 @@ What's built, what's worth adding, and what would take the show to the next leve
 - **Personal points + MVP** (built 2026-10-14, roadmap #10): `players/{id}/points` credited in the same multi-path update as team scores (Feud, Noot, Bingo, Newlywed, host "+N to buzz winner" for Lyric); `buzzes` counter; ⭐ on phones and roster; three-beat winner reveal with MVP, podium, Fastest Finger and Hype Queen.
 - **PWA** (built 2026-10-14, roadmap #28): manifest + icons, service worker caching the app shell (network-first HTML, cache-first hashed assets, precached at install), install button / iOS hint, screen wake lock on all game views.
 
+- **Cheer-off** (built 2026-10-14): 10s tapping tug-of-war. Server-clock-synced countdown/live/counting phases, taps batched 4×/s per phone into `/reactions/{root}-cheer/{round}` (no new rules), 15 taps/s cap, average-per-tapper scoring, transaction-guarded auto-finish from host or TV, +10 winner / +5 personal for top tapper.
+
 ---
 
 ## 📋 Built: pre-event Feud survey (multiple choice)

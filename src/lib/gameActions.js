@@ -3,6 +3,7 @@ import {
   set,
   update,
   runTransaction,
+  get,
   serverTimestamp,
   increment,
   onDisconnect,
@@ -11,6 +12,8 @@ import { db } from './firebase'
 import { GAME_ROOT } from './mode'
 import { DEFAULT_STATE } from './schema'
 import { nextBall, PATTERNS } from './bingo'
+import { serverNow } from './serverTime'
+import { CHEER_SECONDS, CHEER_POINTS, CHEER_TOP_POINTS, COUNTDOWN_MS, tallyCheer } from './cheer'
 
 const game = (path = '') => ref(db, path ? `${GAME_ROOT}/${path}` : GAME_ROOT)
 
@@ -407,5 +410,56 @@ export async function revealNewlywed(nw, answerOverride = null) {
     right.forEach(([id]) => credit(updates, id, NEWLYWED_PERSONAL_POINTS))
   }
   updates['newlywedState/results'] = results
+  return update(game(), updates)
+}
+
+/* ------------------------------------------------------------------ */
+/* Cheer-off                                                           */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Tap counts: one slot per phone per round, written a few times a second.
+ * Kept under /reactions (already open in the rules, and outside /game) so
+ * a room full of tapping doesn't resend the whole game state to everyone.
+ */
+export const cheerTapsRef = (roundId, playerId = '') =>
+  ref(db, `reactions/${GAME_ROOT}-cheer/${roundId}${playerId ? `/${playerId}` : ''}`)
+
+export const sendCheerTaps = (player, roundId, taps) =>
+  set(cheerTapsRef(roundId, player.id), { team: player.team, userName: player.userName, taps })
+
+export function startCheer() {
+  const startsAt = serverNow() + COUNTDOWN_MS
+  return set(game('cheerState'), {
+    phase: 'running',
+    roundId: Math.random().toString(36).slice(2, 10),
+    startsAt,
+    endsAt: startsAt + CHEER_SECONDS * 1000,
+    result: null,
+  })
+}
+
+export const resetCheer = () =>
+  set(game('cheerState'), { phase: 'idle', roundId: '', startsAt: 0, endsAt: 0, result: null })
+
+/**
+ * Score a finished round. Both the host panel and the TV call this when the
+ * clock runs out (whichever is awake); the transaction on the phase makes
+ * sure only one of them actually scores it.
+ */
+export async function finishCheer(roundId) {
+  const lock = await runTransaction(game('cheerState/phase'), (phase) => (phase === 'running' ? 'done' : undefined))
+  if (!lock.committed) return
+  const result = tallyCheer((await get(cheerTapsRef(roundId))).val())
+  const updates = { 'cheerState/result': result }
+  if (result.winner === 'tie') {
+    if (result.top) {
+      updates['scores/teamA'] = increment(CHEER_POINTS / 2)
+      updates['scores/teamB'] = increment(CHEER_POINTS / 2)
+    }
+  } else {
+    updates[`scores/${result.winner}`] = increment(CHEER_POINTS)
+  }
+  if (result.top) credit(updates, result.top.playerId, CHEER_TOP_POINTS)
   return update(game(), updates)
 }

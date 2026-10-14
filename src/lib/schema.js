@@ -13,6 +13,7 @@ export const GAMES = {
   NOOT: 'NOOT',
   BINGO: 'BINGO',
   NEWLYWED: 'NEWLYWED',
+  CHEER: 'CHEER',
   WINNER: 'WINNER',
 }
 
@@ -25,6 +26,7 @@ export const GAME_TITLES = {
   NOOT: '🎶 Noot vir Noot',
   BINGO: '🎱 Bridal Bingo',
   NEWLYWED: '💑 Bride Knows Best',
+  CHEER: '🪢 Cheer-off!',
   WINNER: '🏆 And the winner is…',
 }
 
@@ -130,6 +132,10 @@ export const DEFAULT_STATE = {
     revealed: false,
     results: null, // { teamA: { correct, voters, points }, teamB: {…} }
   },
+  // Cheer-off tug-of-war. Taps live outside /game (see cheerTapsRef).
+  // phase 'running' → clients derive countdown/live/counting from the
+  // server clock; 'done' once scored. result = tallyCheer() output.
+  cheerState: { phase: 'idle', roundId: '', startsAt: 0, endsAt: 0, result: null },
   // Countdown shown big on the TV. { duration, endsAt } — visual only,
   // the host still locks buzzers / closes polls themselves.
   timer: null,

@@ -32,6 +32,7 @@ import BingoBall from '../components/BingoBall'
 import { ReconnectOverlay } from '../components/ConnectionStatus'
 import { ReactionBar } from '../components/Reactions'
 import InstallButton from '../components/InstallButton'
+import { CheerPad } from '../components/Cheer'
 import { useWakeLock } from '../hooks/useWakeLock'
 
 /** Buzz with feedback: a tap click, then a happy chirp + buzz if you won. */
@@ -113,6 +114,7 @@ export default function GuestView({ state, connected }) {
             nw={state.newlywedState}
           />
         )}
+        {state.currentGame === GAMES.CHEER && <CheerPad player={player} cheerState={state.cheerState} />}
         {state.currentGame === GAMES.WINNER && (
           <Splash text="🏆 Final scores are on the TV — thanks for playing! 🥂" />
         )}

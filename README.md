@@ -12,7 +12,7 @@ A real-time multi-game web app for a bridal kitchen tea. Guests scan a QR code a
 | `/#/survey` | Invitees (pre-event) | Multiple-choice survey sent with the invites — answers build the Feud boards |
 | `/#/survey-results` | Host | Live survey tallies, open/close toggle, one-tap "Use as Feud round" |
 
-Games: **LOBBY** (join screen), **FEUD** (Family Feud board with reveals + strikes), **POLL** (live voting with animated results), **LYRIC** (finish-the-lyric buzzer round), **NOOT** (Noot vir Noot guess-the-song), **BINGO** (Bridal Bingo with a tumbler on the TV), **NEWLYWED** (Bride Knows Best: secret bride answers + who-said-it), **WINNER** (final standings, MVP reveal + confetti).
+Games: **LOBBY** (join screen), **FEUD** (Family Feud board with reveals + strikes), **POLL** (live voting with animated results), **LYRIC** (finish-the-lyric buzzer round), **NOOT** (Noot vir Noot guess-the-song), **BINGO** (Bridal Bingo with a tumbler on the TV), **NEWLYWED** (Bride Knows Best: secret bride answers + who-said-it), **CHEER** (10-second tapping tug-of-war), **WINNER** (final standings, MVP reveal + confetti).
 
 ## Stack
 
@@ -96,6 +96,15 @@ Add `?rehearsal=1` to any game URL (e.g. `#/host?rehearsal=1`, `#/display?rehear
 3. **💑 Bride rounds:** each bride's phone shows a 🤫 secret-answer pad. Everyone else sees "What did *your* bride pick?" and guesses. The TV shows 🔒 as each bride locks in. If a bride has no phone, the host can enter her answer ("Enter her answer for her").
 4. **🗨️ Who said it?:** a quote (or "Who is more likely to…?"). Everyone votes Melissa or Calista. If the bank entry has no answer, the host taps "It was Melissa / Calista" to reveal.
 5. **✨ Reveal & score:** each team earns up to 10 points scaled by the *share* of its guessers who got it right (fair with uneven teams). Each correct guesser earns 5 personal points.
+
+## 🪢 Cheer-off (tug-of-war)
+
+Switch to **Cheer-off** and tap **Start**. The TV and phones count down 3-2-1, then for **10 seconds** every phone is one giant button in its team colour. Everyone taps as fast as they can and a 💍 on a rope swings towards the team that's pulling harder. The winner gets **10 points** (a tie splits them), and the top tapper gets 5 MVP points and a shout-out on the TV.
+
+- **Fair with uneven teams:** the rope and the result use *average taps per player*, so 4 keen aunts can beat 7 lazy cousins.
+- **No auto-clickers:** each phone counts at most 15 taps a second.
+- **Same beat on every phone:** all devices use Firebase's server clock, so nobody's phone starts early.
+- **Settings:** length and points are in `src/lib/cheer.js`. The round scores itself after the buzzer (host panel or TV, whichever is awake), and a **Finish now** button appears if it ever stalls.
 
 ## MVP & personal points
 

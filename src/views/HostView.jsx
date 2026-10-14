@@ -46,6 +46,7 @@ import BingoBall from '../components/BingoBall'
 import { appUrl, IS_REHEARSAL, switchMode } from '../lib/mode'
 import { OfflinePill } from '../components/ConnectionStatus'
 import InstallButton from '../components/InstallButton'
+import { CheerControls } from '../components/Cheer'
 import { useWakeLock } from '../hooks/useWakeLock'
 
 /**
@@ -147,6 +148,12 @@ export default function HostView({ state, connected }) {
       {state.currentGame === GAMES.NEWLYWED && (
         <Section title="Bride Knows Best">
           <NewlywedControls nw={state.newlywedState} players={state.players} />
+        </Section>
+      )}
+
+      {state.currentGame === GAMES.CHEER && (
+        <Section title="Cheer-off">
+          <CheerControls cheerState={state.cheerState} />
         </Section>
       )}
 
@@ -258,6 +265,7 @@ const GAME_BUTTONS = {
   NOOT: '🎶 Noot vir Noot',
   BINGO: '🎱 Bingo',
   NEWLYWED: '💑 Bride Knows Best',
+  CHEER: '🪢 Cheer-off',
   WINNER: '🏆 Winner',
 }
 
