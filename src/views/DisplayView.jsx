@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { GAMES, TEAMS, MAX_STRIKES } from '../lib/schema'
+import { GAMES, TEAMS } from '../lib/schema'
 import { THEME } from '../lib/theme'
 import { playCue, unlockAudio, isAudioUnlocked, isMuted, setMuted } from '../lib/sounds'
 import { useGameSounds } from '../hooks/useGameSounds'
@@ -12,6 +12,8 @@ import NewlywedDisplay from '../components/NewlywedDisplay'
 import WinnerDisplay from '../components/WinnerDisplay'
 import { CheerDisplay } from '../components/Cheer'
 import GameTransition from '../components/RecapDisplay'
+import FeudDisplay from '../components/FeudDisplay'
+import PollDisplay from '../components/PollDisplay'
 import { useWakeLock } from '../hooks/useWakeLock'
 
 /**
@@ -43,8 +45,8 @@ export default function DisplayView({ state, connected }) {
 
       <main className="flex-1 flex items-center justify-center relative">
         {state.currentGame === GAMES.LOBBY && <LobbyScreen players={state.players} />}
-        {state.currentGame === GAMES.FEUD && <FeudBoard feudState={state.feudState} />}
-        {state.currentGame === GAMES.POLL && <PollBoard pollState={state.pollState} />}
+        {state.currentGame === GAMES.FEUD && <FeudDisplay feudState={state.feudState} />}
+        {state.currentGame === GAMES.POLL && <PollDisplay pollState={state.pollState} players={state.players} />}
         {state.currentGame === GAMES.LYRIC && (
           <LyricScreen
             lyricState={state.lyricState}
@@ -263,87 +265,6 @@ function TeamList({ team, players }) {
           </span>
         ))}
       </div>
-    </div>
-  )
-}
-
-function FeudBoard({ feudState }) {
-  const answers = feudState?.answers || []
-  return (
-    <div className="w-full max-w-5xl space-y-6">
-      <h2 className="text-4xl font-bold text-center">{feudState?.question}</h2>
-      <div className="grid grid-cols-2 gap-4">
-        {answers.map((a, i) => (
-          <div
-            key={i}
-            className={`rounded-xl px-6 py-5 flex justify-between text-3xl font-bold ${
-              a.revealed ? 'bg-blue-700 animate-card-reveal' : 'bg-white/10'
-            }`}
-          >
-            {a.revealed ? (
-              <>
-                <span>{a.text}</span>
-                <span className="bg-blue-900 rounded-lg px-3">{a.points}</span>
-              </>
-            ) : (
-              <span className="w-full text-center text-white/50">{i + 1}</span>
-            )}
-          </div>
-        ))}
-      </div>
-      <div className="flex justify-center gap-4">
-        {Array.from({ length: MAX_STRIKES }, (_, i) => (
-          <span
-            key={i}
-            className={`text-7xl font-extrabold ${
-              (feudState?.strikes || 0) > i
-                ? 'text-red-500 animate-strike-flash'
-                : 'text-white/10'
-            }`}
-          >
-            ✕
-          </span>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function PollBoard({ pollState }) {
-  const { question, options = [], votes, isOpen, showResults } = pollState || {}
-  const voteList = Object.values(votes || {})
-  const counts = options.map(
-    (o) => voteList.filter((v) => v.choice === o).length
-  )
-  const total = voteList.length || 1
-
-  return (
-    <div className="w-full max-w-4xl space-y-8">
-      <h2 className="text-5xl font-bold text-center">{question || 'Live Poll'}</h2>
-      {showResults ? (
-        <div className="space-y-4">
-          {options.map((o, i) => (
-            <div key={o} className="space-y-1">
-              <div className="flex justify-between text-2xl font-bold">
-                <span>{o}</span>
-                <span>{counts[i]}</span>
-              </div>
-              <div className="h-8 bg-white/10 rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-700 ${
-                    i % 2 === 0 ? 'bg-bride-a' : 'bg-bride-b'
-                  }`}
-                  style={{ width: `${(counts[i] / total) * 100}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="text-center text-3xl text-white/70">
-          {isOpen ? `🗳️ Voting open — ${voteList.length} votes in…` : 'Voting closed'}
-        </p>
-      )}
     </div>
   )
 }

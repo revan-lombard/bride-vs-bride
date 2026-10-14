@@ -42,6 +42,8 @@ What's built, what's worth adding, and what would take the show to the next leve
 
 - **Host run sheet** (built 2026-10-14, roadmap #12): `RUN_SHEET` in rounds.js; ▶ Next switches game (recap included) and loads the step's bank content in one tap; per-step host cue; step list with ✓/Go/Redo; position shared in `runStep`; placeholder content skipped safely.
 
+- **Bigger TV layouts** (built 2026-10-14, roadmap #16): Feud as a gold-framed game-show board (numbered tiles flip to answer + points, round total, last pick, strike boxes, full-screen giant ✕ on a miss). Polls: big option tiles + "votes in" meter vs players online + voter names while open (no results until reveal); reveal races bars out sorted with 👑 winner and voter names; two-option polls become a head-to-head tug-of-war bar.
+
 ---
 
 ## 📋 Built: pre-event Feud survey (multiple choice)
