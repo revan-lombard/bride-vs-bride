@@ -155,18 +155,50 @@ export const FEUD_ROUNDS = [
   },
 ]
 
+/**
+ * Poll presets — the room's opinions and predictions (no right answers, no
+ * points). Two-option "Melissa or Calista?" polls get the head-to-head
+ * tug-of-war reveal on the TV; the rest show racing bars with who voted
+ * what. Questions with a real answer live in Bride Knows Best instead.
+ */
 export const POLL_PRESETS = [
-  {
-    question: 'Who said "I love you" first?',
-    options: [THEME.brideA, THEME.brideB],
-  },
-  {
-    question: 'Who is more likely to get them lost on a road trip?',
-    options: [THEME.brideA, THEME.brideB],
-  },
+  { question: 'Who will be first on the dance floor at the wedding?', options: [THEME.brideA, THEME.brideB] },
+  { question: 'Who is the bigger romantic?', options: [THEME.brideA, THEME.brideB] },
+  { question: 'Who will hog the blankets?', options: [THEME.brideA, THEME.brideB] },
+  { question: 'Who would win a cook-off?', options: [THEME.brideA, THEME.brideB] },
+  { question: 'Who will say "I told you so" more often?', options: [THEME.brideA, THEME.brideB] },
+  { question: 'Who will be in charge of the TV remote?', options: [THEME.brideA, THEME.brideB] },
   {
     question: 'Who will cry first at the wedding?',
     options: [THEME.brideA, THEME.brideB, 'The mothers', 'Everyone at once'],
+  },
+  {
+    question: 'What will everyone still be talking about after the wedding?',
+    options: ['The first dance', 'The speeches', 'Someone\'s dance moves', 'The food'],
+  },
+  {
+    question: 'What should the first dance be?',
+    options: ['A slow classic', 'A choreographed surprise', 'Something Afrikaans', 'A full-on dance-off'],
+  },
+  {
+    question: 'What will the brides argue about first?',
+    options: ['The aircon', 'Whose turn for the dishes', 'Where to eat', 'Who drives'],
+  },
+  {
+    question: 'Where should the first-anniversary trip be?',
+    options: ['Back to the honeymoon spot', 'A road trip', 'Overseas', 'A cosy cabin'],
+  },
+  {
+    question: 'What should the brides\' first pet be?',
+    options: ['A dog', 'A cat', 'Two dogs', 'A goldfish', 'No pets — plants only'],
+  },
+  {
+    question: 'Best piece of marriage advice?',
+    options: ['Never go to bed angry', 'Always share dessert', 'Separate duvets', 'Laugh every day'],
+  },
+  {
+    question: 'How late will the wedding party go?',
+    options: ['Before midnight', 'Midnight', '2am', 'Until the venue kicks us out'],
   },
 ]
 

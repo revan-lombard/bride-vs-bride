@@ -55,6 +55,8 @@ What's built, what's worth adding, and what would take the show to the next leve
 
 - **Bride Knows Best content** (built 2026-10-14): 20 rounds — 10 secret bride answers, 10 "who is more likely / who said" rounds with no invented answers (the host asks the brides at the reveal and taps the name); headers read "Melissa or Calista?".
 
+- **Poll content** (built 2026-10-14): 14 presets — 6 head-to-head "Melissa or Calista?" opinion polls (tug-of-war reveal) + 8 multi-option wedding predictions; factual questions moved to Bride Knows Best.
+
 ---
 
 ## 📋 Built: pre-event Feud survey (multiple choice)
