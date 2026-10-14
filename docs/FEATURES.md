@@ -25,6 +25,10 @@ What's built, what's worth adding, and what would take the show to the next leve
 - **Sound everywhere** (built 2026-10-14): 17 synthesized cues; the TV derives sounds from state changes so every buzz, reveal, strike, score change, timer tick and win is heard without host taps. Click-to-enable-sound prompt + mute on the TV, tap sounds/haptics + mute on phones, expanded host soundboard.
 - **TV polish** (built 2026-10-14, roadmap #15 + #17): animated score count-up with floating "+N", and a title splash when the host switches games.
 
+- **Rehearsal mode** (built 2026-10-14, roadmap #22): `?rehearsal=1` or the host-panel switch runs everything against `/game-test`; banner on every screen, QR follows the mode, sticky per tab.
+- **Reconnect resilience** (built 2026-10-14, roadmap #21): phones get a blocking "Reconnecting…" overlay (Refresh offered after 12s, "Back online" toast); TV and host get an offline pill.
+- **Player roster** (built 2026-10-14, roadmap #4): guests register at `players/{id}` with onDisconnect presence; host can rename / switch team / remove, synced live to the phone; duplicate-name warning; joined names on the TV lobby. Buzzes now carry `playerId`, so two guests with the same name can't both see "You buzzed first".
+
 ---
 
 ## 📋 Built: pre-event Feud survey (multiple choice)

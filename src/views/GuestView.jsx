@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { GAMES, TEAMS, loadPlayer, savePlayer } from '../lib/schema'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { GAMES, TEAMS, loadPlayer, savePlayer, clearPlayer, isMe } from '../lib/schema'
 import { THEME } from '../lib/theme'
 import {
   buzz as sendBuzz,
@@ -7,6 +7,7 @@ import {
   submitFeudGuess,
   submitNootGuess,
   claimBingo,
+  registerPlayer,
 } from '../lib/gameActions'
 import {
   BINGO_LETTERS,
@@ -23,6 +24,7 @@ import {
 import { useBingoDraw } from '../hooks/useBingoDraw'
 import { playCue, vibrate, isMuted, setMuted, unlockAudio } from '../lib/sounds'
 import BingoBall from '../components/BingoBall'
+import { ReconnectOverlay } from '../components/ConnectionStatus'
 
 /** Buzz with feedback: a tap click, then a happy chirp + buzz if you won. */
 async function buzz(player) {
@@ -42,14 +44,16 @@ async function buzz(player) {
  */
 export default function GuestView({ state, connected }) {
   const [player, setPlayer] = useState(loadPlayer)
+  const removed = useRosterSync(player, setPlayer, state, connected)
 
-  if (!player) return <JoinScreen onJoin={setPlayer} />
+  if (!player) return <JoinScreen onJoin={setPlayer} removed={removed} />
   if (!state) return <Splash text="Connecting…" />
 
   const teamColor = player.team === 'teamA' ? 'bg-bride-a-dark' : 'bg-bride-b-dark'
 
   return (
     <div className="min-h-full flex flex-col">
+      <ReconnectOverlay connected={connected} />
       <header className={`${teamColor} px-4 py-3 flex items-center justify-between`}>
         <div>
           <div className="font-bold">{player.userName}</div>
@@ -99,7 +103,44 @@ export default function GuestView({ state, connected }) {
   )
 }
 
-function JoinScreen({ onJoin }) {
+/**
+ * Keeps this phone's roster entry in step: registers on connect (and after
+ * a host reset), adopts host renames / team moves, and logs out if the host
+ * removes the player. Returns true once the player has been removed.
+ */
+function useRosterSync(player, setPlayer, state, connected) {
+  const [removed, setRemoved] = useState(false)
+  const registering = useRef(false)
+  const raw = player ? state?.players?.[player.id] : undefined
+  // A leftover onDisconnect after a host reset can leave { online: false }
+  // with no name — treat that as "not registered".
+  const entry = raw?.kicked || raw?.userName ? raw : null
+
+  useEffect(() => {
+    if (!player || !state || !connected) return
+    if (entry?.kicked) {
+      clearPlayer()
+      setPlayer(null)
+      setRemoved(true)
+      return
+    }
+    if (entry && (entry.userName !== player.userName || entry.team !== player.team)) {
+      const updated = { ...player, userName: entry.userName, team: entry.team }
+      savePlayer(updated)
+      setPlayer(updated)
+    }
+    if ((!entry || entry.online !== true) && !registering.current) {
+      registering.current = true
+      registerPlayer(player, entry).finally(() => {
+        registering.current = false
+      })
+    }
+  }, [player, state, connected, entry, setPlayer])
+
+  return removed
+}
+
+function JoinScreen({ onJoin, removed }) {
   const [name, setName] = useState('')
   const [team, setTeam] = useState(null)
 
@@ -117,6 +158,9 @@ function JoinScreen({ onJoin }) {
   return (
     <div className="min-h-full flex flex-col items-center justify-center p-6 gap-6">
       <h1 className="text-3xl font-bold text-center">{THEME.title}</h1>
+      {removed && (
+        <p className="text-sm text-yellow-300 text-center">The host reset your spot — join again below.</p>
+      )}
       <input
         className="w-full max-w-xs rounded-xl bg-white/10 px-4 py-3 text-lg text-center outline-none focus:ring-2 ring-white/50"
         placeholder="Your name"
@@ -150,7 +194,7 @@ function JoinScreen({ onJoin }) {
 
 function BuzzerPad({ player, buzzerState }) {
   const { isUnlocked, firstBuzzed } = buzzerState
-  const iWon = firstBuzzed?.userName === player.userName
+  const iWon = isMe(firstBuzzed, player)
 
   if (firstBuzzed) {
     return (
@@ -186,7 +230,7 @@ function BuzzerPad({ player, buzzerState }) {
 function FeudPad({ player, feudState, buzzerState }) {
   const { question, options = [], answers = [] } = feudState || {}
   const { isUnlocked, firstBuzzed } = buzzerState || {}
-  const iWon = firstBuzzed?.userName === player.userName
+  const iWon = isMe(firstBuzzed, player)
   const revealed = new Set(answers.filter((a) => a.revealed).map((a) => a.text))
 
   // No round with options loaded yet — plain buzzer, like the lyric game.
@@ -250,7 +294,7 @@ function FeudPad({ player, feudState, buzzerState }) {
 function NootPad({ player, nootState, buzzerState }) {
   const { prompt, options = [], correct, revealed, wrongGuesses = [] } = nootState || {}
   const { isUnlocked, firstBuzzed } = buzzerState || {}
-  const iWon = firstBuzzed?.userName === player.userName
+  const iWon = isMe(firstBuzzed, player)
 
   if (!options.length) {
     return <BuzzerPad player={player} buzzerState={buzzerState} />

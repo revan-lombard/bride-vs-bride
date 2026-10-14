@@ -79,10 +79,22 @@ Pattern points are in `PATTERNS` in `src/lib/bingo.js`.
 
 Everything is synthesized in the browser (`src/lib/sounds.js`) — no audio files. The TV plays sounds automatically from game events: game switches (whoosh + title splash), buzzes, Feud reveals and strikes, Noot answers, lyric reveals, poll result drumrolls, score changes (with an animated count-up), the timer's last five seconds and a horn at zero, the bingo tumbler and ball drop, bingo wins and the winner screen's applause. The host's soundboard has extras (drumroll, applause, horn…). Phones play quiet tap sounds and vibrate (Android) for their own buzzes, votes and bingo marks; each device has a 🔊/🔇 toggle.
 
+## Rehearsal mode
+
+Add `?rehearsal=1` to any game URL (e.g. `#/host?rehearsal=1`, `#/display?rehearsal=1`), or tap **🧪 Switch to rehearsal** under ⚙️ Setup on the host panel. Everything — scores, buzzers, roster, bingo — then runs against a separate `/game-test` copy, so the live game is never touched. An amber "REHEARSAL" strip shows on every screen, the QR code automatically points guests at the rehearsal, and the mode sticks for that browser tab until you switch back.
+
+> **One-time:** re-publish the rules from `docs/firebase-rules.json` in the Firebase console — they now include the `game-test` path. Without it rehearsal writes are refused.
+
+## Players & connection
+
+- **Roster:** the host panel shows who's joined (👥 N online, per team). Tap ✏️ to fix a name, ⇄ to switch team, ✕ to remove someone (their phone goes back to the join screen). Changes apply on the guest's phone instantly. Grey dot = phone asleep or left; ⚠️ flags two players with the same name.
+- **Lobby:** the TV lists everyone who's joined under each team as they arrive.
+- **Reconnecting:** if a phone loses connection, its screen is covered with "Reconnecting…" so nobody hammers a dead buzzer; after 12s it offers a Refresh button (team and bingo card survive). The TV and host panel show a small red "offline" pill instead.
+
 ## Running the show (day-of checklist)
 
 1. Open `/#/display` on the TV and **click the page once** — a yellow "click to turn on sound" prompt shows until you do (browsers block audio until then).
-2. Open `/#/host` on your phone/laptop.
+2. Open `/#/host` on your phone/laptop. (Practising beforehand? Use rehearsal mode — see above.)
 3. Guests scan the QR code shown in the LOBBY screen (or from the host panel).
 4. Switch games from the host panel — every phone follows automatically.
 5. **Feud rounds:** load a round (survey results page, content bank, or paste `Question` + `answer | points` lines), then arm the buzzers. Guests see the question + options on their phones; the buzz winner picks on their phone and the board auto-reveals a hit (or auto-strikes a miss) with the sound cue. Re-arm for the next guess; award the revealed total with the 🏆 buttons. Manual tap-to-reveal and ✕ buttons still work as an override.

@@ -24,6 +24,9 @@ import {
   setBingoPattern,
   drawBingoBall,
   continueBingo,
+  renamePlayer,
+  movePlayer,
+  removePlayer,
   startTimer,
   clearTimer,
   triggerSound,
@@ -33,6 +36,8 @@ import { PATTERNS, BINGO_MAX, ballLabel } from '../lib/bingo'
 import { useBingoDraw } from '../hooks/useBingoDraw'
 import { CUE_NAMES } from '../lib/sounds'
 import BingoBall from '../components/BingoBall'
+import { appUrl, IS_REHEARSAL, switchMode } from '../lib/mode'
+import { OfflinePill } from '../components/ConnectionStatus'
 
 /**
  * Host control panel — phone/laptop friendly. Everything is a direct write
@@ -41,12 +46,13 @@ import BingoBall from '../components/BingoBall'
 export default function HostView({ state, connected }) {
   if (!state) return <p className="p-8 text-center">Connecting…</p>
 
-  const guestUrl = `${location.origin}${import.meta.env.BASE_URL}#/`
+  const guestUrl = appUrl('/')
 
   return (
     <div className="min-h-full max-w-2xl mx-auto p-4 space-y-6 pb-24">
+      <OfflinePill connected={connected} label="Host offline" />
       <header className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">🎛️ Host Panel</h1>
+        <h1 className="text-xl font-bold">🎛️ Host Panel{IS_REHEARSAL && ' 🧪'}</h1>
         <span className={`text-xs ${connected ? 'text-green-400' : 'text-red-400'}`}>
           {connected ? '● live' : '● offline'}
         </span>
@@ -94,6 +100,8 @@ export default function HostView({ state, connected }) {
           ))}
         </div>
       </Section>
+
+      <Roster players={state.players} />
 
       {BUZZER_GAMES.includes(state.currentGame) && (
         <Section title="Buzzers">
@@ -180,8 +188,27 @@ export default function HostView({ state, connected }) {
             <QRCodeSVG value={guestUrl} size={96} />
             <code className="text-stage text-xs break-all">{guestUrl}</code>
           </div>
+          <div className="rounded-xl bg-amber-400/15 p-3 space-y-2 text-sm">
+            <p>
+              {IS_REHEARSAL
+                ? '🧪 You are in rehearsal mode — a separate practice copy of the game. Live scores are untouched.'
+                : 'Practise the show without touching the live game: rehearsal mode uses a separate copy of everything.'}
+            </p>
+            <button
+              onClick={() => switchMode(!IS_REHEARSAL)}
+              className="w-full rounded-lg bg-amber-400 text-stage py-2 font-bold"
+            >
+              {IS_REHEARSAL ? '🎬 Back to the live game' : '🧪 Switch to rehearsal'}
+            </button>
+            {IS_REHEARSAL && (
+              <p className="text-xs text-white/60">
+                Open the TV at <code className="break-all">{appUrl('/display')}</code> — the QR code above already
+                points guests at the rehearsal.
+              </p>
+            )}
+          </div>
           <button
-            onClick={() => confirm('Reset ALL scores and game state?') && resetGame()}
+            onClick={() => confirm(IS_REHEARSAL ? 'Reset the REHEARSAL game?' : 'Reset ALL scores and game state?') && resetGame()}
             className="w-full rounded-lg bg-red-900/60 py-3 text-sm font-bold"
           >
             ⚠️ Reset everything
@@ -622,6 +649,81 @@ function BingoControls({ bingoState }) {
         and the first claim scores automatically.
       </p>
     </div>
+  )
+}
+
+/** Live list of who has joined, with fix-ups: rename, switch team, remove. */
+function Roster({ players }) {
+  const list = Object.entries(players || {})
+    .map(([id, p]) => ({ id, ...p }))
+    .filter((p) => p.userName && !p.kicked)
+    .sort((a, b) => Number(b.online === true) - Number(a.online === true) || (a.joinedAt || 0) - (b.joinedAt || 0))
+  const online = list.filter((p) => p.online === true)
+  const nameCount = list.reduce((m, p) => {
+    const k = p.userName.trim().toLowerCase()
+    m[k] = (m[k] || 0) + 1
+    return m
+  }, {})
+  const teamCount = (team) => online.filter((p) => p.team === team).length
+
+  const rename = (p) => {
+    const name = prompt(`Rename ${p.userName} to:`, p.userName)?.trim()
+    if (name && name !== p.userName) renamePlayer(p.id, name.slice(0, 20))
+  }
+
+  return (
+    <details className="group rounded-xl bg-white/5 p-3">
+      <summary className="cursor-pointer list-none flex items-center justify-between text-sm">
+        <span>
+          👥 <b>{online.length}</b> online
+          <span className="text-white/50">
+            {' '}
+            · {TEAMS.teamA.label} {teamCount('teamA')} · {TEAMS.teamB.label} {teamCount('teamB')}
+          </span>
+        </span>
+        <span className="text-white/50 group-open:hidden">▸</span>
+        <span className="text-white/50 hidden group-open:inline">▾</span>
+      </summary>
+      <div className="pt-3 space-y-1">
+        {!list.length && <p className="text-sm text-white/50">Nobody has joined yet.</p>}
+        {list.map((p) => (
+          <div key={p.id} className="flex items-center gap-2 rounded-lg bg-white/5 px-2 py-1.5 text-sm">
+            <span
+              className={`h-2 w-2 rounded-full shrink-0 ${p.online === true ? 'bg-green-400' : 'bg-white/20'}`}
+              title={p.online === true ? 'Online' : 'Offline (phone asleep or left)'}
+            />
+            <span className={`flex-1 truncate ${p.online === true ? '' : 'text-white/40'}`}>
+              {p.userName}
+              {nameCount[p.userName.trim().toLowerCase()] > 1 && (
+                <span className="ml-1 text-xs text-yellow-300" title="Two players share this name">⚠️ same name</span>
+              )}
+            </span>
+            <span
+              className={`rounded px-1.5 text-xs ${p.team === 'teamA' ? 'bg-bride-a-dark' : 'bg-bride-b-dark'}`}
+            >
+              {TEAMS[p.team]?.label.replace('Team ', '')}
+            </span>
+            <button onClick={() => rename(p)} className="rounded bg-white/10 px-2 py-1" title="Rename">
+              ✏️
+            </button>
+            <button
+              onClick={() => movePlayer(p.id, p.team === 'teamA' ? 'teamB' : 'teamA')}
+              className="rounded bg-white/10 px-2 py-1"
+              title="Switch team"
+            >
+              ⇄
+            </button>
+            <button
+              onClick={() => confirm(`Remove ${p.userName}? Their phone goes back to the join screen.`) && removePlayer(p.id)}
+              className="rounded bg-white/10 px-2 py-1"
+              title="Remove"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
+    </details>
   )
 }
 

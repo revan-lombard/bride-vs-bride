@@ -4,6 +4,8 @@ import { GAMES, GAME_TITLES, TEAMS, MAX_STRIKES } from '../lib/schema'
 import { THEME } from '../lib/theme'
 import { playCue, unlockAudio, isAudioUnlocked, isMuted, setMuted } from '../lib/sounds'
 import { useGameSounds } from '../hooks/useGameSounds'
+import { appUrl } from '../lib/mode'
+import { OfflinePill } from '../components/ConnectionStatus'
 import BingoDisplay from '../components/BingoDisplay'
 import Confetti from '../components/Confetti'
 
@@ -11,7 +13,7 @@ import Confetti from '../components/Confetti'
  * The TV / projector view (16:9). Read-only — it just renders the shared
  * state large and loud.
  */
-export default function DisplayView({ state }) {
+export default function DisplayView({ state, connected }) {
   useSoundCues(state?.soundCue)
   useGameSounds(state)
   const [audioOn, setAudioOn] = useState(isAudioUnlocked)
@@ -34,7 +36,7 @@ export default function DisplayView({ state }) {
       <TimerBanner timer={state.timer} />
 
       <main className="flex-1 flex items-center justify-center relative">
-        {state.currentGame === GAMES.LOBBY && <LobbyScreen />}
+        {state.currentGame === GAMES.LOBBY && <LobbyScreen players={state.players} />}
         {state.currentGame === GAMES.FEUD && <FeudBoard feudState={state.feudState} />}
         {state.currentGame === GAMES.POLL && <PollBoard pollState={state.pollState} />}
         {state.currentGame === GAMES.LYRIC && (
@@ -61,6 +63,7 @@ export default function DisplayView({ state }) {
 
       <GameSplash game={state.currentGame} />
       <SoundToggle audioOn={audioOn} />
+      <OfflinePill connected={connected} label="TV offline" />
     </div>
   )
 }
@@ -266,14 +269,43 @@ function SoundToggle({ audioOn }) {
   )
 }
 
-function LobbyScreen() {
-  const guestUrl = `${location.origin}${import.meta.env.BASE_URL}#/`
+function LobbyScreen({ players }) {
+  const guestUrl = appUrl('/')
+  const joined = Object.values(players || {}).filter((p) => p?.userName && !p.kicked)
   return (
-    <div className="text-center space-y-8">
-      <h1 className="text-7xl font-extrabold">{THEME.title}</h1>
-      <p className="text-2xl text-white/80">Scan to join a team</p>
-      <div className="inline-block bg-white p-6 rounded-3xl">
-        <QRCodeSVG value={guestUrl} size={280} />
+    <div className="w-full grid grid-cols-[1fr_auto_1fr] items-center gap-10">
+      <TeamList team="teamA" players={joined} />
+      <div className="text-center space-y-8">
+        <h1 className="text-7xl font-extrabold">{THEME.title}</h1>
+        <p className="text-2xl text-white/80">
+          Scan to join a team{joined.length > 0 && ` · ${joined.length} joined`}
+        </p>
+        <div className="inline-block bg-white p-6 rounded-3xl">
+          <QRCodeSVG value={guestUrl} size={280} />
+        </div>
+      </div>
+      <TeamList team="teamB" players={joined} />
+    </div>
+  )
+}
+
+/** Name chips for one team, newest at the end so arrivals pop in. */
+function TeamList({ team, players }) {
+  const names = players
+    .filter((p) => p.team === team)
+    .sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0))
+  const color = team === 'teamA' ? 'bg-bride-a-dark' : 'bg-bride-b-dark'
+  return (
+    <div className="self-stretch flex flex-col gap-3 overflow-hidden">
+      <h3 className={`text-2xl font-bold text-center ${team === 'teamA' ? 'text-bride-a' : 'text-bride-b'}`}>
+        {TEAMS[team].label} ({names.length})
+      </h3>
+      <div className="flex flex-wrap justify-center content-start gap-2">
+        {names.slice(-40).map((p, i) => (
+          <span key={`${p.userName}-${i}`} className={`${color} rounded-full px-4 py-1.5 text-xl font-bold animate-card-reveal`}>
+            {p.userName}
+          </span>
+        ))}
       </div>
     </div>
   )

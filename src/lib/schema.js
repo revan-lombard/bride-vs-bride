@@ -107,6 +107,10 @@ export const DEFAULT_STATE = {
     // Earlier winners this game (line → two lines → full house…)
     winners: [],
   },
+  // Who has joined: { [playerId]: { userName, team, online, joinedAt, kicked? } }
+  // Guests write their own entry (online flips false on disconnect); the
+  // host can rename, move or remove (kicked) players from the roster.
+  players: null,
   // Countdown shown big on the TV. { duration, endsAt } — visual only,
   // the host still locks buzzers / closes polls themselves.
   timer: null,
@@ -116,6 +120,10 @@ export const DEFAULT_STATE = {
   // from state changes on the display, so they don't go through here.
   soundCue: null,
 }
+
+/** Did this player win the buzz? (By id; name fallback for old buzz records.) */
+export const isMe = (who, player) =>
+  Boolean(who) && (who.playerId ? who.playerId === player.id : who.userName === player.userName)
 
 /** Guest identity is kept in localStorage so refreshes don't lose the player. */
 export function loadPlayer() {
@@ -128,4 +136,8 @@ export function loadPlayer() {
 
 export function savePlayer(player) {
   localStorage.setItem('bvb-player', JSON.stringify(player))
+}
+
+export function clearPlayer() {
+  localStorage.removeItem('bvb-player')
 }

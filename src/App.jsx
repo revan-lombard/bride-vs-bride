@@ -7,6 +7,7 @@ import SurveyView from './views/SurveyView'
 import SurveyResultsView from './views/SurveyResultsView'
 import SetupNotice from './components/SetupNotice'
 import PinGate from './components/PinGate'
+import RehearsalBanner from './components/RehearsalBanner'
 
 export default function App() {
   const gameState = useGameState()
@@ -14,6 +15,8 @@ export default function App() {
   if (!gameState.isConfigured) return <SetupNotice />
 
   return (
+    <>
+    <RehearsalBanner />
     <Routes>
       <Route path="/" element={<GuestView {...gameState} />} />
       <Route path="/host" element={<PinGate><HostView {...gameState} /></PinGate>} />
@@ -21,5 +24,6 @@ export default function App() {
       <Route path="/survey" element={<SurveyView />} />
       <Route path="/survey-results" element={<PinGate><SurveyResultsView /></PinGate>} />
     </Routes>
+    </>
   )
 }

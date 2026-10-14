@@ -5,12 +5,14 @@ import {
   runTransaction,
   serverTimestamp,
   increment,
+  onDisconnect,
 } from 'firebase/database'
 import { db } from './firebase'
+import { GAME_ROOT } from './mode'
 import { DEFAULT_STATE } from './schema'
 import { nextBall, PATTERNS } from './bingo'
 
-const game = (path = '') => ref(db, path ? `game/${path}` : 'game')
+const game = (path = '') => ref(db, path ? `${GAME_ROOT}/${path}` : GAME_ROOT)
 
 /* ------------------------------------------------------------------ */
 /* Host actions                                                        */
@@ -79,6 +81,14 @@ export const triggerLyricPlayback = (action) =>
 export const triggerSound = (name) =>
   set(game('soundCue'), { name, ts: serverTimestamp() })
 
+/** Roster fixes from the host panel. The guest's phone picks these up live. */
+export const renamePlayer = (id, userName) => set(game(`players/${id}/userName`), userName)
+
+export const movePlayer = (id, team) => set(game(`players/${id}/team`), team)
+
+/** Sends the guest back to the join screen (they can rejoin fresh). */
+export const removePlayer = (id) => update(game(`players/${id}`), { kicked: true, online: false })
+
 export const startTimer = (seconds) =>
   set(game('timer'), { duration: seconds, endsAt: Date.now() + seconds * 1000 })
 
@@ -99,6 +109,7 @@ export async function buzz(player) {
     (current) => {
       if (current !== null) return undefined // someone beat us — abort
       return {
+        playerId: player.id,
         userName: player.userName,
         team: player.team,
         timestamp: serverTimestamp(),
@@ -106,6 +117,22 @@ export async function buzz(player) {
     }
   )
   return result.committed
+}
+
+/**
+ * Put this guest on the roster (or mark them back online). Called on
+ * connect and whenever their entry is missing, e.g. after a host reset.
+ * onDisconnect is re-armed each time because it fires only once.
+ */
+export async function registerPlayer(player, existing) {
+  const entry = game(`players/${player.id}`)
+  await onDisconnect(entry).update({ online: false })
+  return update(
+    entry,
+    existing
+      ? { online: true }
+      : { userName: player.userName, team: player.team, online: true, joinedAt: serverTimestamp() }
+  )
 }
 
 export const castVote = (player, choice) =>

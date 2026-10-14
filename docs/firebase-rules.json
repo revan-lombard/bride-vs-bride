@@ -4,6 +4,10 @@
       ".read": true,
       ".write": true
     },
+    "game-test": {
+      ".read": true,
+      ".write": true
+    },
     "survey": {
       "config": {
         ".read": true,
