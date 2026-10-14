@@ -95,73 +95,121 @@ export const LYRIC_ROUNDS = [
 ]
 
 /**
- * 🎶 Noot vir Noot — guess-the-song rounds. A clip plays on the TV, the
- * buzz winner picks the title on their phone; a hit auto-awards `points`,
+ * 🎶 Noot vir Noot — guess-the-song rounds. The song plays, the buzz winner
+ * picks the title on their phone; a hit auto-awards `points` (default 10),
  * a miss greys that option out for the next buzzer. Options are shuffled
  * on load, so listing the correct one first here is fine.
  *
- * Audio uses the same local-folder loader as the karaoke rounds — drop the
- * mp3s in the music folder on the display laptop and set `audio` to the
- * filename, with clipStart/clipEnd in seconds (clipEnd 0 = play until the
- * host stops it). No audio prep script needed — original tracks work as-is.
- * ✏️ Swap in your own songs/decoys; double-check titles and artists.
+ * Two ways to play the music:
+ *  - 📱 From your phone (no prep): leave `audio: ''`. Play the song on
+ *    Spotify/YouTube through a speaker and tap "🎧 Playing from my phone" —
+ *    the TV shows "Luister…" while it plays.
+ *  - 💻 From the TV laptop: drop the mp3s in the music folder on the display
+ *    laptop and set `audio` to the filename, plus clipStart/clipEnd in
+ *    seconds (clipEnd 0 = play until the host stops it). The mp3s are never
+ *    committed — copyrighted audio stays off the public site.
+ *
+ * The "Which ABBA/Queen/… song is it?" rounds use one artist's hits as the
+ * options, so recognising the voice isn't enough — you need the title.
  */
 export const NOOT_ROUNDS = [
   {
-    song: 'Loslappie — Kurt Darren',
-    correct: 'Loslappie — Kurt Darren',
-    options: [
-      'Loslappie — Kurt Darren',
-      'Kaptein — Kurt Darren',
-      'Sê Net Ja — Kurt Darren',
-      'Hasie — Kurt Darren',
-    ],
-    audio: '', // e.g. 'loslappie.mp3'
-    clipStart: 0,
-    clipEnd: 0,
-    points: 10,
+    song: 'De la Rey — Bok van Blerk',
+    prompt: 'Raai die liedjie! 🎶',
+    correct: 'De la Rey — Bok van Blerk',
+    options: ['De la Rey — Bok van Blerk', 'Afrikaners is Plesierig — Bok van Blerk', 'Kaptein (Span die Seile) — Kurt Darren', 'Hie\' Kommie Bokke — Kurt Darren'],
+    audio: '',
   },
   {
-    song: 'De La Rey — Bok van Blerk',
-    correct: 'De La Rey — Bok van Blerk',
-    options: [
-      'De La Rey — Bok van Blerk',
-      'Afrikanerhart — Bok van Blerk',
-      'Kaplyn — Bok van Blerk',
-      'Tyd om te Trek — Bok van Blerk',
-    ],
+    song: 'Kaptein (Span die Seile) — Kurt Darren',
+    prompt: 'Raai die liedjie! 🎶',
+    correct: 'Kaptein (Span die Seile) — Kurt Darren',
+    options: ['Kaptein (Span die Seile) — Kurt Darren', 'Hie\' Kommie Bokke — Kurt Darren', 'De la Rey — Bok van Blerk', 'Afrikaners is Plesierig — Bok van Blerk'],
     audio: '',
-    clipStart: 0,
-    clipEnd: 0,
-    points: 10,
   },
   {
     song: 'Lisa se Klavier — Koos Kombuis',
+    prompt: 'Raai die liedjie! 🎶',
     correct: 'Lisa se Klavier — Koos Kombuis',
-    options: [
-      'Lisa se Klavier — Koos Kombuis',
-      'Kinders van die Wind — Koos du Plessis',
-      'Blou — Valiant Swart',
-      'Sonvanger — Valiant Swart',
-    ],
+    options: ['Lisa se Klavier — Koos Kombuis', 'Kinders van die Wind — Laurika Rauch', 'Suikerbossie — Volksliedjie', 'Sarie Marais — Volksliedjie'],
     audio: '',
-    clipStart: 0,
-    clipEnd: 0,
-    points: 10,
   },
   {
-    song: 'Pampoen — Steve Hofmeyr',
-    correct: 'Pampoen — Steve Hofmeyr',
-    options: [
-      'Pampoen — Steve Hofmeyr',
-      'Agter Elke Man — Steve Hofmeyr',
-      'Toeka — Steve Hofmeyr',
-      'Windpomp — ander een',
-    ],
+    song: 'Suikerbossie — Volksliedjie',
+    prompt: 'Sing saam! Watter volksliedjie is dit? 🎶',
+    correct: 'Suikerbossie — Volksliedjie',
+    options: ['Suikerbossie — Volksliedjie', 'Sarie Marais — Volksliedjie', 'Jan Pierewiet — Volksliedjie', 'Bobbejaan Klim die Berg — Volksliedjie'],
     audio: '',
-    clipStart: 0,
-    clipEnd: 0,
-    points: 10,
+  },
+  {
+    song: 'Jerusalema — Master KG',
+    prompt: 'Name that tune! 🇿🇦',
+    correct: 'Jerusalema — Master KG',
+    options: ['Jerusalema — Master KG', 'Pata Pata — Miriam Makeba', 'Weekend Special — Brenda Fassie', 'Vulindlela — Brenda Fassie'],
+    audio: '',
+  },
+  {
+    song: 'Vulindlela — Brenda Fassie',
+    prompt: 'Name that tune! 💒',
+    correct: 'Vulindlela — Brenda Fassie',
+    options: ['Vulindlela — Brenda Fassie', 'Weekend Special — Brenda Fassie', 'Pata Pata — Miriam Makeba', 'Impi — Johnny Clegg'],
+    audio: '',
+  },
+  {
+    song: 'Impi — Johnny Clegg',
+    prompt: 'Name that tune! 🇿🇦',
+    correct: 'Impi — Johnny Clegg',
+    options: ['Impi — Johnny Clegg', 'Scatterlings of Africa — Johnny Clegg', 'Shosholoza — Traditional', 'Jerusalema — Master KG'],
+    audio: '',
+  },
+  {
+    song: 'Mamma Mia — ABBA',
+    prompt: 'Which ABBA song is it? 🪩',
+    correct: 'Mamma Mia — ABBA',
+    options: ['Mamma Mia — ABBA', 'Dancing Queen — ABBA', 'Waterloo — ABBA', 'Gimme! Gimme! Gimme! — ABBA'],
+    audio: '',
+  },
+  {
+    song: 'I Wanna Dance with Somebody — Whitney Houston',
+    prompt: 'Which Whitney song is it? 🎤',
+    correct: 'I Wanna Dance with Somebody — Whitney Houston',
+    options: ['I Wanna Dance with Somebody — Whitney Houston', 'I Will Always Love You — Whitney Houston', 'How Will I Know — Whitney Houston', 'Greatest Love of All — Whitney Houston'],
+    audio: '',
+  },
+  {
+    song: 'Don\'t Stop Me Now — Queen',
+    prompt: 'Which Queen song is it? 👑',
+    correct: 'Don\'t Stop Me Now — Queen',
+    options: ['Don\'t Stop Me Now — Queen', 'Bohemian Rhapsody — Queen', 'We Will Rock You — Queen', 'Another One Bites the Dust — Queen'],
+    audio: '',
+  },
+  {
+    song: 'Marry You — Bruno Mars',
+    prompt: 'Which Bruno Mars song is it? 💍',
+    correct: 'Marry You — Bruno Mars',
+    options: ['Marry You — Bruno Mars', 'Just the Way You Are — Bruno Mars', 'Locked Out of Heaven — Bruno Mars', 'Uptown Funk — Mark Ronson ft. Bruno Mars'],
+    audio: '',
+  },
+  {
+    song: 'Single Ladies (Put a Ring on It) — Beyoncé',
+    prompt: 'Which Beyoncé song is it? 💍',
+    correct: 'Single Ladies (Put a Ring on It) — Beyoncé',
+    options: ['Single Ladies (Put a Ring on It) — Beyoncé', 'Crazy in Love — Beyoncé', 'Halo — Beyoncé', 'Love On Top — Beyoncé'],
+    audio: '',
+  },
+  {
+    song: 'Love Story — Taylor Swift',
+    prompt: 'Which Taylor Swift song is it? 💌',
+    correct: 'Love Story — Taylor Swift',
+    options: ['Love Story — Taylor Swift', 'You Belong with Me — Taylor Swift', 'Blank Space — Taylor Swift', 'Shake It Off — Taylor Swift'],
+    audio: '',
+  },
+  {
+    song: 'Mr. Brightside — The Killers',
+    prompt: 'Name that tune! 🎸',
+    correct: 'Mr. Brightside — The Killers',
+    options: ['Mr. Brightside — The Killers', 'Don\'t Stop Me Now — Queen', 'Sweet Caroline — Neil Diamond', 'Girls Just Want to Have Fun — Cyndi Lauper'],
+    audio: '',
   },
 ]
 
@@ -254,7 +302,7 @@ export const RUN_SHEET = [
   { game: 'NEWLYWED', newlywed: 1, note: 'Another secret bride answer.' },
   { game: 'NEWLYWED', newlywed: 5, note: 'Who said it? — everyone votes, then Reveal.' },
   { game: 'LYRIC', lyric: 0, note: 'Emoji Song Quiz: arm buzzers — the winner shouts the title. ✅ +5 / +10, then ✨ Reveal. Load the next song from the Lyric bank (13 more).' },
-  { game: 'NOOT', noot: 0, note: 'Play the clip, arm buzzers — the winner picks the song.' },
+  { game: 'NOOT', noot: 0, note: 'Play ~10s of the song on your phone/speaker, tap 🎧 Playing from my phone, arm buzzers — the winner picks the title. 13 more songs in the Noot bank.' },
   { game: 'CHEER', note: 'Final showdown! Last chance to catch up.' },
   { game: 'BINGO', bingo: { mode: 'numbers', pattern: 'full' }, note: 'Number bingo for a full house — try ⏩ Auto-draw.' },
   { game: 'WINNER', note: 'The big reveal: team winner, then the MVP. Thank everyone! 🥂' },

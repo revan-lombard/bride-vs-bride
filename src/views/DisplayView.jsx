@@ -413,11 +413,10 @@ function NootScreen({ nootState, audioFiles, onLoadFiles }) {
   return (
     <div className="w-full max-w-5xl text-center space-y-8">
       <h2 className="text-3xl font-bold text-white/60">🎶 Noot vir Noot</h2>
-      {playing ? (
+      {(playing || (nootState?.listening && !revealed)) && (
         <p className="text-5xl font-extrabold animate-text-pulse">🎵 Luister… 🎵</p>
-      ) : (
-        <p className="text-4xl font-extrabold">{prompt}</p>
       )}
+      <p className="text-4xl font-extrabold">{prompt}</p>
 
       <div className="grid grid-cols-2 gap-4">
         {options.map((option) => {

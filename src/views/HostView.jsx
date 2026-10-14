@@ -26,6 +26,7 @@ import {
   triggerLyricPlayback,
   loadNootRound,
   triggerNootPlayback,
+  setNootListening,
   revealNootAnswer,
   newBingoGame,
   setBingoPattern,
@@ -653,7 +654,7 @@ function NootControls({ nootState }) {
         onPick={(r) => loadNootRound(r)}
       />
       <p className="text-xs text-white/40">
-        Play the clip, arm the buzzers — the winner picks the song on their phone.
+        Play the song (clip on the TV, or from your phone/speaker), arm the buzzers — the winner picks the title on their phone.
         Correct picks score {nootState?.points || 10} points automatically.
       </p>
 
@@ -673,7 +674,7 @@ function NootControls({ nootState }) {
               {nootState.lastGuess.correct ? `✅ +${nootState.points} points!` : '❌ wrong'}
             </div>
           )}
-          {nootState.audio && (
+          {nootState.audio ? (
             <div className="flex gap-2">
               <button
                 onClick={() => triggerNootPlayback('play')}
@@ -688,6 +689,13 @@ function NootControls({ nootState }) {
                 ⏹ Stop
               </button>
             </div>
+          ) : (
+            <button
+              onClick={() => setNootListening(!nootState.listening)}
+              className={`w-full rounded-lg py-2 font-bold ${nootState.listening ? 'bg-yellow-300 text-stage' : 'bg-green-700'}`}
+            >
+              {nootState.listening ? '⏹ Music done — clear “Luister…”' : '🎧 Playing it from my phone'}
+            </button>
           )}
           <button
             onClick={() => revealNootAnswer(!nootState.revealed)}

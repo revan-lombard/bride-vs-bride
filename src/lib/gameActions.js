@@ -369,7 +369,11 @@ export const loadNootRound = (round) =>
     wrongGuesses: [],
     playback: null,
     lastGuess: null,
+    listening: false,
   })
+
+/** No audio file: the host plays the song from a phone — TV shows "Luister…". */
+export const setNootListening = (on) => set(game('nootState/listening'), on)
 
 export const triggerNootPlayback = (action) =>
   set(game('nootState/playback'), { action, ts: serverTimestamp() })

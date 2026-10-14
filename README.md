@@ -54,6 +54,12 @@ Live URL: **https://revan-lombard.github.io/bride-vs-bride/** (guests `#/`, host
 4. Before the event, tap **Close** on the results page so late submissions can't change locked-in boards.
 5. On the day, tap **Use as Feud round** on any question — vote counts become the board (points = votes), then switch to FEUD on the host panel.
 
+## 🎶 Noot vir Noot
+
+14 ready rounds (`NOOT_ROUNDS` in `src/lib/rounds.js`): Afrikaans and South African classics (De la Rey, Kaptein, Lisa se Klavier, Suikerbossie, Jerusalema, Vulindlela, Impi), plus "which song is it?" rounds where all four options are by one artist (ABBA, Whitney, Queen, Bruno Mars, Beyoncé, Taylor Swift).
+
+**No audio files needed:** play about 10 seconds of the song from your phone (Spotify/YouTube) through a speaker and tap **🎧 Playing it from my phone**. The TV shows "🎵 Luister…". Arm the buzzers, and the buzz winner picks the title on their phone: a hit scores 10, a miss greys that option out for the next buzzer. Prefer clips from the TV laptop? Put the mp3s in the music folder and set `audio` plus `clipStart`/`clipEnd` on the round.
+
 ## 🎶 Emoji Song Quiz (the Lyric game)
 
 The Lyric game's bank holds 14 real singalong songs as **emoji clues** (💃 👑 + "ABBA · 1976" → *Dancing Queen*). The TV shows the clue, the hint and blanks shaped like the title. Arm buzzers, the buzz winner shouts the title, award it with **✅ +5 / +10**, then **✨ Reveal answer**. The songs and clues are in `LYRIC_ROUNDS` in `src/lib/rounds.js`.

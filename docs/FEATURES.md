@@ -49,6 +49,8 @@ What's built, what's worth adding, and what would take the show to the next leve
 - **Emoji Song Quiz** (built 2026-10-14): LYRIC_ROUNDS filled with 14 real songs as emoji clues + hints (`kind: 'emoji'`, title as answer); TV renders clue big with "name that song" header. Real lyrics deliberately not stored (copyright, public repo) — manual entry for lyric-style rounds.
 - **Messages for the brides** (built 2026-10-14): 💌 composer on phones (to A/B/both, signed, multiple), stored at `/messages/{root}` (survives resets; rules: create/delete only, ≤600 chars); host `/#/messages` page with live list, remove, keepsake HTML download (print → PDF), text download, copy all; message count on the TV lobby and host header.
 
+- **Noot vir Noot content** (built 2026-10-14): NOOT_ROUNDS rewritten — 14 rounds (Afrikaans/SA classics + "which ABBA/Whitney/Queen/Bruno Mars/Beyoncé/Taylor Swift song?" artist rounds) with checked titles/artists; no-audio mode where the host plays from a phone and toggles "Luister…" on the TV.
+
 ---
 
 ## 📋 Built: pre-event Feud survey (multiple choice)
