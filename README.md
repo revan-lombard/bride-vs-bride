@@ -2,15 +2,34 @@
 
 A real-time multi-game web app for a bridal kitchen tea. Guests scan a QR code and use their phones as buzzers and voting pads; the host runs the show from a control panel; a TV/projector shows the live board.
 
+## 🔑 Quick access
+
+**Host PIN: `2101`** (needed for the host panel, survey results and messages — remembered on each device after the first time)
+
+| What | Link | Who / notes |
+|---|---|---|
+| 📱 **Guests join** | [https://revan-lombard.github.io/bride-vs-bride/](https://revan-lombard.github.io/bride-vs-bride/) | Everyone — or just scan the QR code on the TV lobby / the host's **📱 Join QR** |
+| 📺 **TV / projector** | [https://revan-lombard.github.io/bride-vs-bride/#/display](https://revan-lombard.github.io/bride-vs-bride/#/display) | Open on the TV laptop, **click once** to turn on sound |
+| 🎛️ **Host panel** | [https://revan-lombard.github.io/bride-vs-bride/#/host](https://revan-lombard.github.io/bride-vs-bride/#/host) | 🔑 PIN — run the show with the 📋 run sheet's ▶ Next |
+| 💌 **Messages for the brides** | [https://revan-lombard.github.io/bride-vs-bride/#/messages](https://revan-lombard.github.io/bride-vs-bride/#/messages) | 🔑 PIN — read, remove, download the keepsake (also the 💌 button on the host panel) |
+| 📝 **Pre-event survey** | [https://revan-lombard.github.io/bride-vs-bride/#/survey](https://revan-lombard.github.io/bride-vs-bride/#/survey) | Send with the invites — answers become Feud boards |
+| 📊 **Survey results** | [https://revan-lombard.github.io/bride-vs-bride/#/survey-results](https://revan-lombard.github.io/bride-vs-bride/#/survey-results) | 🔑 PIN — live tallies, open/close, "Use as Feud round" |
+| 🧪 **Rehearsal mode** | add `?rehearsal=1`, e.g. [https://revan-lombard.github.io/bride-vs-bride/#/host?rehearsal=1](https://revan-lombard.github.io/bride-vs-bride/#/host?rehearsal=1) | Practice copy of everything — live scores untouched (or ⚙️ Setup → Switch to rehearsal) |
+
+**Where things live (to change content):** all question banks, the run sheet and the gift words are in `src/lib/rounds.js`; survey questions in `src/lib/surveyQuestions.js`; the brides' names and the PIN in `src/lib/theme.js`. Push to `main` and the site redeploys in about a minute.
+
+> The PIN only keeps curious guests off the host screens — it's visible in this public repo, so it's not real security.
+
 ## The screens
 
 | Route | Who | What |
 |---|---|---|
-| `/#/` | Guests | Join a team, buzz, vote |
-| `/#/host` | Host | Switch games, arm buzzers, run polls/feud rounds, edit scores, fire sound cues |
-| `/#/display` | TV / projector | Scoreboard, Feud board, poll results, buzz alerts (16:9) |
+| `/#/` | Guests | Join a team, buzz, vote, emoji reactions, 💌 messages |
+| `/#/host` | Host (PIN) | Run sheet, switch games, buzzers, scores, players, sounds |
+| `/#/display` | TV / projector | Scoreboard and every game's big-screen view (16:9) |
+| `/#/messages` | Host (PIN) | Messages guests wrote for the brides; keepsake download |
 | `/#/survey` | Invitees (pre-event) | Multiple-choice survey sent with the invites — answers build the Feud boards |
-| `/#/survey-results` | Host | Live survey tallies, open/close toggle, one-tap "Use as Feud round" |
+| `/#/survey-results` | Host (PIN) | Live survey tallies, open/close toggle, one-tap "Use as Feud round" |
 
 Games: **LOBBY** (join screen), **FEUD** (Family Feud board with reveals + strikes), **POLL** (live voting with animated results), **LYRIC** (finish-the-lyric buzzer round), **NOOT** (Noot vir Noot guess-the-song), **BINGO** (Bridal Bingo with a tumbler on the TV), **NEWLYWED** (Bride Knows Best: secret bride answers + who-said-it), **CHEER** (10-second tapping tug-of-war), **WINNER** (final standings, MVP reveal + confetti).
 
@@ -171,7 +190,7 @@ Phones have a row of emojis along the bottom (😂 ❤️ 🎉 👏 😱 🔥 �
 ## Running the show (day-of checklist)
 
 1. Open `/#/display` on the TV and **click the page once** — a yellow "click to turn on sound" prompt shows until you do (browsers block audio until then).
-2. Open `/#/host` on your phone/laptop and work down the **📋 Run sheet** with ▶ Next. (Practising beforehand? Use rehearsal mode — see above.)
+2. Open `/#/host` on your phone/laptop (PIN **2101**) and work down the **📋 Run sheet** with ▶ Next. (Practising beforehand? Use rehearsal mode — see above.)
 3. Guests scan the QR code shown in the LOBBY screen (or from the host panel).
 4. Switch games from the host panel — every phone follows automatically.
 5. **Feud rounds:** load a round (survey results page, content bank, or paste `Question` + `answer | points` lines), then arm the buzzers. Guests see the question + options on their phones; the buzz winner picks on their phone and the board auto-reveals a hit (or auto-strikes a miss) with the sound cue. Re-arm for the next guess; award the revealed total with the 🏆 buttons. Manual tap-to-reveal and ✕ buttons still work as an override.

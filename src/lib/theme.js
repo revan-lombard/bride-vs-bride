@@ -9,5 +9,5 @@ export const THEME = {
   title: '💍 Bride vs. Bride 💍',
   // PIN for /#/host and /#/survey-results. Party-grade security only —
   // it just stops curious guests who edit the URL.
-  hostPin: '2811',
+  hostPin: '2101',
 }
