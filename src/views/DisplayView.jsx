@@ -15,6 +15,7 @@ import GameTransition from '../components/RecapDisplay'
 import FeudDisplay from '../components/FeudDisplay'
 import PollDisplay from '../components/PollDisplay'
 import { useWakeLock } from '../hooks/useWakeLock'
+import { useMessages } from '../hooks/useMessages'
 
 /**
  * The TV / projector view (16:9). Read-only — it just renders the shared
@@ -228,6 +229,7 @@ function SoundToggle({ audioOn }) {
 }
 
 function LobbyScreen({ players }) {
+  const messages = useMessages().length
   const guestUrl = appUrl('/')
   const joined = Object.values(players || {}).filter((p) => p?.userName && !p.kicked)
   return (
@@ -237,6 +239,7 @@ function LobbyScreen({ players }) {
         <h1 className="text-7xl font-extrabold">{THEME.title}</h1>
         <p className="text-2xl text-white/80">
           Scan to join a team{joined.length > 0 && ` · ${joined.length} joined`}
+          {messages > 0 && ` · 💌 ${messages} messages for the brides`}
         </p>
         <div className="inline-block bg-white p-6 rounded-3xl">
           <QRCodeSVG value={guestUrl} size={280} />
@@ -270,7 +273,8 @@ function TeamList({ team, players }) {
 }
 
 function LyricScreen({ lyricState, audioFiles, onLoadFiles }) {
-  const { snippet, answer, showAnswer, audio, cutAt, playback } = lyricState || {}
+  const { snippet, answer, showAnswer, audio, cutAt, playback, kind, hint } = lyricState || {}
+  const emoji = kind === 'emoji'
   const audioRef = useRef(null)
   const lastPlayTs = useRef(null)
   // Karaoke phase: while the vocals are still singing we show "sing along";
@@ -319,8 +323,15 @@ function LyricScreen({ lyricState, audioFiles, onLoadFiles }) {
 
   return (
     <div className="w-full max-w-5xl text-center space-y-10">
-      <h2 className="text-3xl font-bold text-white/60">🎵 Finish the Lyric</h2>
-      <p className="text-5xl font-extrabold leading-snug">“{snippet}”</p>
+      <h2 className="text-3xl font-bold text-white/60">{emoji ? '🎶 Emoji Song Quiz — name that song!' : '🎵 Finish the Lyric'}</h2>
+      {emoji ? (
+        <div className="space-y-4">
+          <p className="text-[9rem] leading-none tracking-widest">{snippet}</p>
+          {hint && <p className="text-3xl text-white/70">{hint}</p>}
+        </div>
+      ) : (
+        <p className="text-5xl font-extrabold leading-snug">“{snippet}”</p>
+      )}
 
       {showAnswer ? (
         <p className="text-5xl font-extrabold text-green-400 animate-card-reveal">

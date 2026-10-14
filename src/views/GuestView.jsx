@@ -33,6 +33,7 @@ import { ReconnectOverlay } from '../components/ConnectionStatus'
 import { ReactionBar } from '../components/Reactions'
 import InstallButton from '../components/InstallButton'
 import { CheerPad } from '../components/Cheer'
+import MessageComposer from '../components/MessageComposer'
 import { useWakeLock } from '../hooks/useWakeLock'
 
 /** Buzz with feedback: a tap click, then a happy chirp + buzz if you won. */
@@ -53,6 +54,7 @@ async function buzz(player) {
  */
 export default function GuestView({ state, connected }) {
   const [player, setPlayer] = useState(loadPlayer)
+  const [writing, setWriting] = useState(false) // message-for-the-brides sheet
   useWakeLock()
   const removed = useRosterSync(player, setPlayer, state, connected)
 
@@ -65,6 +67,7 @@ export default function GuestView({ state, connected }) {
     <div className="min-h-full flex flex-col">
       <ReconnectOverlay connected={connected} />
       <RecapToast recap={state.recap} player={player} />
+      {writing && <MessageComposer player={player} onClose={() => setWriting(false)} />}
       <header className={`${teamColor} px-4 py-3 flex items-center justify-between`}>
         <div>
           <div className="font-bold">{player.userName}</div>
@@ -76,6 +79,9 @@ export default function GuestView({ state, connected }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <button onClick={() => setWriting(true)} className="text-xl" title="Write the brides a message">
+            💌
+          </button>
           <MuteButton />
           <span
             className={`h-3 w-3 rounded-full ${connected ? 'bg-green-400' : 'bg-red-400'}`}
@@ -86,7 +92,12 @@ export default function GuestView({ state, connected }) {
 
       <main className="flex-1 flex flex-col items-center justify-center p-6">
         {state.currentGame === GAMES.LOBBY && (
-          <LobbyPad player={player} players={state.players} reactionsOn={state.reactionsOn !== false} />
+          <LobbyPad
+            player={player}
+            players={state.players}
+            reactionsOn={state.reactionsOn !== false}
+            onWrite={() => setWriting(true)}
+          />
         )}
         {state.currentGame === GAMES.FEUD && (
           <FeudPad
@@ -117,7 +128,12 @@ export default function GuestView({ state, connected }) {
         )}
         {state.currentGame === GAMES.CHEER && <CheerPad player={player} cheerState={state.cheerState} />}
         {state.currentGame === GAMES.WINNER && (
-          <Splash text="🏆 Final scores are on the TV — thanks for playing! 🥂" />
+          <div className="text-center space-y-5 max-w-sm">
+            <Splash text="🏆 Final scores are on the TV — thanks for playing! 🥂" />
+            <button onClick={() => setWriting(true)} className="w-full rounded-xl bg-bride-a py-4 text-lg font-bold">
+              💌 Leave the brides a message before you go
+            </button>
+          </div>
         )}
         {state.currentGame === GAMES.POLL && (
           <VotePad player={player} pollState={state.pollState} />
@@ -506,7 +522,7 @@ function RecapToast({ recap, player }) {
 }
 
 /** Waiting room: who's on your team, and a nudge to play with the emoji bar. */
-function LobbyPad({ player, players, reactionsOn }) {
+function LobbyPad({ player, players, reactionsOn, onWrite }) {
   const team = Object.values(players || {})
     .filter((p) => p?.userName && !p.kicked && p.team === player.team)
     .sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0))
@@ -534,6 +550,9 @@ function LobbyPad({ player, players, reactionsOn }) {
           </>
         )}
       </p>
+      <button onClick={onWrite} className="w-full rounded-xl bg-white/10 py-3 font-bold">
+        💌 Write the brides a message
+      </button>
     </div>
   )
 }

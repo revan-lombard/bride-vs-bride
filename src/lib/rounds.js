@@ -51,110 +51,47 @@ export const POLL_PRESETS = [
 ]
 
 /**
- * Finish-the-lyric rounds — songs chosen for maximum singalong across the
- * decades + the musicals. `snippet` is what shows on the TV (end it where
- * the guests must take over — a trailing … works well); `answer` is the
- * missing words, revealed by the host after a buzz.
+ * Lyric-game rounds — an EMOJI SONG QUIZ: the TV shows an emoji clue plus a
+ * hint (artist · year), with blanks shaped like the title; guests buzz and
+ * shout the song title, the host awards ✅ +5 / +10 and taps ✨ Reveal.
+ * Songs chosen for maximum singalong across the decades + the musicals.
  *
- * ✏️ PASTE THE LYRICS YOURSELF: each entry says which line goes where.
- * The pattern for nearly all of them: snippet = the chorus up to just
- * before its most famous line (usually the title line), answer = that
- * famous line. Delete any you don't want; on the day you just tap the
- * ones you like.
+ *   kind: 'emoji'  → TV header "Emoji Song Quiz", clue shown big
+ *   snippet        → the emoji clue
+ *   hint           → small line under the clue
+ *   answer         → the title (revealed by the host)
  *
- * 🎵 KARAOKE ROUNDS: prepare a track with tools/prepare_lyric_track.py
- * (song plays normally, vocals fade at the cut, backing continues), then
- * add to the entry:
+ * Why not real lyrics? They're copyrighted and this repo is public, so
+ * lyric text doesn't live here. For a classic finish-the-lyric round, type
+ * the line into ✍️ Manual entry on the host panel on the day (it goes to
+ * the live game only, never into the code) — no `kind` = lyric style.
+ *
+ * 🎵 KARAOKE ROUNDS (manual entry or your own entries here): prepare a
+ * track with tools/prepare_lyric_track.py (song plays normally, vocals fade
+ * at the cut, backing continues) and add to the entry:
  *
  *   audio: 'dancing-queen-karaoke-cut.mp3',   // filename only
  *   cutAt: 64,                                 // seconds where vocals stop
  *
  * The mp3s are NEVER committed or deployed (copyrighted audio on a public
  * site is a no-go) — keep them in a folder on the display laptop and load
- * them with one click on the TV view when prompted. On the day: tap the
- * 🎵 round, tap "▶️ Play on TV" — when the vocals drop out the TV flips to
- * the blanks + "buzz in" state automatically.
+ * them with one click on the TV view when prompted.
  */
 export const LYRIC_ROUNDS = [
-  // ---- 70s ----
-  {
-    song: 'Dancing Queen — ABBA (1976, also Mamma Mia!)',
-    snippet: 'PASTE: the first two lines of the chorus, stopping right before the title line…',
-    answer: 'PASTE: the title line',
-  },
-  {
-    song: 'I Will Survive — Gloria Gaynor (1978)',
-    snippet: 'PASTE: the chorus opening, stopping right before the title line…',
-    answer: 'PASTE: the title line',
-  },
-  {
-    song: 'Summer Nights — Grease (1978)',
-    snippet: 'PASTE: the famous opening two lines, stopping before line three…',
-    answer: 'PASTE: line three — bonus: make Team Melissa sing Danny, Team Calista sing Sandy',
-  },
-
-  // ---- 80s (all three double as Rock of Ages numbers) ----
-  {
-    song: "Livin' on a Prayer — Bon Jovi (1986, Rock of Ages)",
-    snippet: 'PASTE: the pre-chorus (the halfway-there part), stopping before the title line…',
-    answer: 'PASTE: the title line',
-  },
-  {
-    song: "Don't Stop Believin' — Journey (1981, Rock of Ages)",
-    snippet: 'PASTE: the famous first line of verse one, stopping halfway through line two…',
-    answer: 'PASTE: the rest of line two',
-  },
-  {
-    song: 'Total Eclipse of the Heart — Bonnie Tyler (1983, Rock of Ages)',
-    snippet: 'PASTE: the two-word opening phrase plus the first full line of verse one, stopping before it resolves…',
-    answer: 'PASTE: the line that resolves it',
-  },
-
-  // ---- 90s ----
-  {
-    song: 'Wannabe — Spice Girls (1996)',
-    snippet: 'PASTE: the first line of the chorus, stopping at the end of it…',
-    answer: 'PASTE: the second line of the chorus',
-  },
-  {
-    song: 'I Want It That Way — Backstreet Boys (1999)',
-    snippet: 'PASTE: the two chorus lines before the title line…',
-    answer: 'PASTE: the title line',
-  },
-
-  // ---- 2000s ----
-  {
-    song: 'Since U Been Gone — Kelly Clarkson (2004)',
-    snippet: 'PASTE: the chorus from the title line onward, stopping before the line about breathing…',
-    answer: 'PASTE: the breathing line',
-  },
-  {
-    song: 'Kaptein (Span die Seile) — Kurt Darren (2002)',
-    snippet: 'PASTE: the chorus opening, stopping right before the subtitle phrase…',
-    answer: 'PASTE: the subtitle phrase — the whole kitchen tea will finish this one',
-  },
-  {
-    song: 'Breaking Free — High School Musical (2006)',
-    snippet: 'PASTE: the first two chorus lines, stopping before the title line…',
-    answer: 'PASTE: the title line',
-  },
-  {
-    song: "You Can't Stop the Beat — Hairspray (2007 film)",
-    snippet: 'PASTE: the run-up lines of the chorus, stopping right before the title line…',
-    answer: 'PASTE: the title line',
-  },
-
-  // ---- 2010s ----
-  {
-    song: 'Rolling in the Deep — Adele (2010)',
-    snippet: 'PASTE: the famous first line of verse one…',
-    answer: 'PASTE: the second line',
-  },
-  {
-    song: 'Shake It Off — Taylor Swift (2014)',
-    snippet: 'PASTE: the chorus (players/haters lines), stopping before the title line…',
-    answer: 'PASTE: the title line',
-  },
+  { kind: 'emoji', song: 'Dancing Queen — ABBA', snippet: '💃 👑', hint: 'ABBA · 1976 · also in Mamma Mia!', answer: 'Dancing Queen' },
+  { kind: 'emoji', song: 'I Will Survive — Gloria Gaynor', snippet: '👁️ 📜 🏝️💪', hint: 'Gloria Gaynor · 1978 · disco anthem', answer: 'I Will Survive' },
+  { kind: 'emoji', song: 'Summer Nights — Grease', snippet: '☀️🏖️ 🌙✨', hint: 'Grease · 1978 · Danny & Sandy', answer: 'Summer Nights' },
+  { kind: 'emoji', song: "Livin' on a Prayer — Bon Jovi", snippet: '💓 🔛 🙏', hint: 'Bon Jovi · 1986 · Tommy & Gina', answer: "Livin' on a Prayer" },
+  { kind: 'emoji', song: "Don't Stop Believin' — Journey", snippet: '🚫🛑 🙏✨', hint: 'Journey · 1981 · Glee made it huge again', answer: "Don't Stop Believin'" },
+  { kind: 'emoji', song: 'Total Eclipse of the Heart — Bonnie Tyler', snippet: '💯 🌑☀️ ❤️', hint: 'Bonnie Tyler · 1983 · power ballad', answer: 'Total Eclipse of the Heart' },
+  { kind: 'emoji', song: 'Wannabe — Spice Girls', snippet: '🙋‍♀️ ➡️ 🐝', hint: 'Spice Girls · 1996 · their first single', answer: 'Wannabe' },
+  { kind: 'emoji', song: 'I Want It That Way — Backstreet Boys', snippet: '👁️ 🤲 👉 🛣️', hint: 'Backstreet Boys · 1999', answer: 'I Want It That Way' },
+  { kind: 'emoji', song: 'Since U Been Gone — Kelly Clarkson', snippet: '⏳ 👉 🐝 👋', hint: 'Kelly Clarkson · 2004', answer: 'Since U Been Gone' },
+  { kind: 'emoji', song: 'Kaptein (Span die Seile) — Kurt Darren', snippet: '👨‍✈️⛵ 🪢', hint: 'Kurt Darren · 2002 · Afrikaans dance-floor classic', answer: 'Kaptein (Span die Seile)' },
+  { kind: 'emoji', song: 'Breaking Free — High School Musical', snippet: '💥 🆓', hint: 'High School Musical · 2006', answer: 'Breaking Free' },
+  { kind: 'emoji', song: "You Can't Stop the Beat — Hairspray", snippet: '👉 🚫🛑 🥁', hint: 'Hairspray · 2007 film finale', answer: "You Can't Stop the Beat" },
+  { kind: 'emoji', song: 'Rolling in the Deep — Adele', snippet: '🎳 ⤵️ 🌊', hint: 'Adele · 2010', answer: 'Rolling in the Deep' },
+  { kind: 'emoji', song: 'Shake It Off — Taylor Swift', snippet: '🥤 👉 📴', hint: 'Taylor Swift · 2014', answer: 'Shake It Off' },
 ]
 
 /**
@@ -316,7 +253,7 @@ export const RUN_SHEET = [
   { game: 'FEUD', feud: 1, note: 'Second Feud board. Arm buzzers after reading the question.' },
   { game: 'NEWLYWED', newlywed: 1, note: 'Another secret bride answer.' },
   { game: 'NEWLYWED', newlywed: 5, note: 'Who said it? — everyone votes, then Reveal.' },
-  { game: 'LYRIC', lyric: 0, note: 'Play the track on the TV, arm buzzers, judge with ✅ +5 / +10.' },
+  { game: 'LYRIC', lyric: 0, note: 'Emoji Song Quiz: arm buzzers — the winner shouts the title. ✅ +5 / +10, then ✨ Reveal. Load the next song from the Lyric bank (13 more).' },
   { game: 'NOOT', noot: 0, note: 'Play the clip, arm buzzers — the winner picks the song.' },
   { game: 'CHEER', note: 'Final showdown! Last chance to catch up.' },
   { game: 'BINGO', bingo: { mode: 'numbers', pattern: 'full' }, note: 'Number bingo for a full house — try ⏩ Auto-draw.' },

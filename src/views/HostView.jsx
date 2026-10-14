@@ -53,6 +53,7 @@ import { appUrl, IS_REHEARSAL, switchMode } from '../lib/mode'
 import { OfflinePill } from '../components/ConnectionStatus'
 import InstallButton from '../components/InstallButton'
 import { CheerControls } from '../components/Cheer'
+import { useMessages } from '../hooks/useMessages'
 import { useWakeLock } from '../hooks/useWakeLock'
 
 /**
@@ -70,6 +71,7 @@ export default function HostView({ state, connected }) {
       <OfflinePill connected={connected} label="Host offline" />
       <header className="flex items-center justify-between">
         <h1 className="text-xl font-bold">🎛️ Host Panel{IS_REHEARSAL && ' 🧪'}</h1>
+        <MessagesLink />
         <JoinQrButton url={guestUrl} />
         <span className={`text-xs ${connected ? 'text-green-400' : 'text-red-400'}`}>
           {connected ? '● live' : '● offline'}
@@ -294,6 +296,16 @@ const SOUNDBOARD = [
   ['whoosh', '💨', 'whoosh'],
 ]
 
+/** Header shortcut to the brides' messages, with a live count. */
+function MessagesLink() {
+  const count = useMessages().length
+  return (
+    <a href="#/messages" className="ml-auto mr-2 rounded-lg bg-white/15 px-3 py-1.5 text-sm font-bold">
+      💌 {count}
+    </a>
+  )
+}
+
 /**
  * One tap to a full-screen join QR on the host's own phone — for late
  * arrivals, or when the TV is showing a game instead of the lobby.
@@ -302,7 +314,7 @@ function JoinQrButton({ url }) {
   const [open, setOpen] = useState(false)
   return (
     <>
-      <button onClick={() => setOpen(true)} className="ml-auto mr-3 rounded-lg bg-white/15 px-3 py-1.5 text-sm font-bold">
+      <button onClick={() => setOpen(true)} className="mr-3 rounded-lg bg-white/15 px-3 py-1.5 text-sm font-bold">
         📱 Join QR
       </button>
       {open && (
@@ -572,7 +584,7 @@ function LyricControls({ lyricState }) {
       <ContentBank
         items={LYRIC_ROUNDS}
         label={(l) => `${l.audio ? '🎵 ' : ''}${l.song || l.snippet}`}
-        onPick={(l) => loadLyric(l.snippet, l.answer, l.audio || '', l.cutAt || 0)}
+        onPick={(l) => loadLyric(l.snippet, l.answer, l.audio || '', l.cutAt || 0, l)}
       />
       <ManualEntry>
         <input
@@ -853,7 +865,7 @@ async function runStep(step, index, state) {
   if (!placeholder && item) {
     if (key === 'feud') await loadFeudRound(item.question, item.answers, null, item.decoys || [])
     if (key === 'poll') await openPoll(item.question, item.options)
-    if (key === 'lyric') await loadLyric(item.snippet, item.answer, item.audio || '', item.cutAt || 0)
+    if (key === 'lyric') await loadLyric(item.snippet, item.answer, item.audio || '', item.cutAt || 0, item)
     if (key === 'noot') await loadNootRound(item)
     if (key === 'newlywed') await loadNewlywedRound(item)
     if (key === 'bingo') await newBingoGame(item.pattern || 'line', item.mode || 'numbers')

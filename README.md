@@ -54,6 +54,22 @@ Live URL: **https://revan-lombard.github.io/bride-vs-bride/** (guests `#/`, host
 4. Before the event, tap **Close** on the results page so late submissions can't change locked-in boards.
 5. On the day, tap **Use as Feud round** on any question — vote counts become the board (points = votes), then switch to FEUD on the host panel.
 
+## 🎶 Emoji Song Quiz (the Lyric game)
+
+The Lyric game's bank holds 14 real singalong songs as **emoji clues** (💃 👑 + "ABBA · 1976" → *Dancing Queen*). The TV shows the clue, the hint and blanks shaped like the title. Arm buzzers, the buzz winner shouts the title, award it with **✅ +5 / +10**, then **✨ Reveal answer**. The songs and clues are in `LYRIC_ROUNDS` in `src/lib/rounds.js`.
+
+Real lyrics aren't stored in the repo, because they're copyrighted and the repo is public. For a classic finish-the-lyric round, type the line into ✍️ **Manual entry** on the day. It only goes to the live game, never into the code.
+
+## 💌 Messages for the brides
+
+Every phone has a 💌 button, and the lobby and end-of-show screens nudge people to use it. Guests write a message (to Melissa, to Calista, or to both), sign it, and can send as many as they like. The TV lobby shows a running count, but never the messages themselves.
+
+- **Kept safe:** messages are stored at their own `messages` path, so **Reset everything never deletes them**. The rules let guests add messages but not edit anyone's message, with a 600-character limit.
+- **Collect them:** tap **💌 N** at the top of the host panel, or open `/#/messages` (same PIN). It lists every message live. **Remove** deletes one you don't want. **⬇️ Keepsake page** downloads a pretty printable page (open it, then Print → Save as PDF to send the brides), and there's also **⬇️ Text file** and **📋 Copy all**.
+- **Rehearsal mode** messages are kept separately, so practice messages never mix with the real ones.
+
+> **One-time:** re-publish `docs/firebase-rules.json` in the Firebase console — it now includes the `messages` section. Until you do, sending a message fails ("Couldn't send").
+
 ## Karaoke lyric rounds
 
 The Lyric game can play the actual song: the track plays with vocals, the vocals fade out at your chosen moment, the backing continues, and the TV flips to word-shaped blanks + "buzz in".

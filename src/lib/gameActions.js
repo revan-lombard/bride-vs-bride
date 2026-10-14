@@ -7,6 +7,8 @@ import {
   serverTimestamp,
   increment,
   onDisconnect,
+  push,
+  remove,
 } from 'firebase/database'
 import { db } from './firebase'
 import { GAME_ROOT } from './mode'
@@ -155,12 +157,15 @@ export const revealFeudAnswer = (index, revealed = true) =>
 
 export const setStrikes = (strikes) => set(game('feudState/strikes'), strikes)
 
-export const loadLyric = (snippet, answer, audio = '', cutAt = 0) =>
+/** extra: { kind: 'emoji', hint } for Emoji Song Quiz rounds (see LYRIC_ROUNDS). */
+export const loadLyric = (snippet, answer, audio = '', cutAt = 0, extra = {}) =>
   set(game('lyricState'), {
     snippet,
     answer,
     audio,
     cutAt,
+    kind: extra.kind || 'lyric',
+    hint: extra.hint || '',
     showAnswer: false,
     playback: null,
   })
@@ -587,3 +592,28 @@ export async function finishCheer(roundId) {
   if (result.top) credit(updates, result.top.playerId, CHEER_TOP_POINTS)
   return update(game(), updates)
 }
+
+/* ------------------------------------------------------------------ */
+/* Messages for the brides                                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Guest messages live at /messages/{root} — outside /game, so "Reset
+ * everything" never deletes them. Rules allow adding and deleting (host
+ * moderation) but not editing someone else's message.
+ */
+export const messagesRef = () => ref(db, `messages/${GAME_ROOT}`)
+
+export const MESSAGE_MAX = 600
+
+export const sendMessage = (player, { text, name, to }) =>
+  push(messagesRef(), {
+    text: text.trim().slice(0, MESSAGE_MAX),
+    name: (name || player.userName).trim().slice(0, 40),
+    to: to || 'both', // 'both' | 'teamA' (bride A) | 'teamB' (bride B)
+    team: player.team,
+    playerId: player.id,
+    ts: serverTimestamp(),
+  })
+
+export const deleteMessage = (id) => remove(ref(db, `messages/${GAME_ROOT}/${id}`))

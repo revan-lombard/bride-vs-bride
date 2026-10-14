@@ -12,6 +12,15 @@
       ".read": true,
       ".write": true
     },
+    "messages": {
+      ".read": true,
+      "$root": {
+        "$messageId": {
+          ".write": "!data.exists() || !newData.exists()",
+          ".validate": "!newData.exists() || (newData.hasChildren(['text', 'name']) && newData.child('text').isString() && newData.child('text').val().length <= 600)"
+        }
+      }
+    },
     "survey": {
       "config": {
         ".read": true,
