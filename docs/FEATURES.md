@@ -40,6 +40,8 @@ What's built, what's worth adding, and what would take the show to the next leve
 
 - **Round recaps** (built 2026-10-14, roadmap #17 extended): host game switches go through `switchGame`, which snapshots scores/personal points (`gameStart`) and, when the game being left changed the score, writes a `recap` (team gains, totals, star of the round, MVP so far, next game). TV `GameTransition` plays recap → title splash; phones get a toast; manual "scoreboard check" from the host.
 
+- **Host run sheet** (built 2026-10-14, roadmap #12): `RUN_SHEET` in rounds.js; ▶ Next switches game (recap included) and loads the step's bank content in one tap; per-step host cue; step list with ✓/Go/Redo; position shared in `runStep`; placeholder content skipped safely.
+
 ---
 
 ## 📋 Built: pre-event Feud survey (multiple choice)

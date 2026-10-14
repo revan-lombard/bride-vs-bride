@@ -93,6 +93,8 @@ export function switchGame(name, state) {
   return update(game(), updates)
 }
 
+export const setRunStep = (index) => set(game('runStep'), index)
+
 /** "📊 Scoreboard check" on demand: standings + MVP, no round gains. */
 export const showRecap = (state) => set(game('recap'), buildRecap(state, null, null, state.currentGame))
 

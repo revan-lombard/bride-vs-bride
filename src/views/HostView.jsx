@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { GAMES, TEAMS, MAX_STRIKES, BUZZER_GAMES, brideName, brideTeamOf } from '../lib/schema'
 import { THEME } from '../lib/theme'
-import { FEUD_ROUNDS, POLL_PRESETS, LYRIC_ROUNDS, NOOT_ROUNDS, NEWLYWED_ROUNDS } from '../lib/rounds'
+import { FEUD_ROUNDS, POLL_PRESETS, LYRIC_ROUNDS, NOOT_ROUNDS, NEWLYWED_ROUNDS, RUN_SHEET } from '../lib/rounds'
 import {
   switchGame,
   showRecap,
+  setRunStep,
+  resetCheer,
   adjustScore,
   unlockBuzzers,
   lockBuzzers,
@@ -70,6 +72,8 @@ export default function HostView({ state, connected }) {
           {connected ? '● live' : '● offline'}
         </span>
       </header>
+
+      <RunSheet state={state} />
 
       <Section title="Game">
         <div className="grid grid-cols-3 gap-2">
@@ -770,6 +774,132 @@ function BingoControls({ bingoState }) {
         and the first claim scores automatically.
       </p>
     </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/* Run sheet                                                           */
+/* ------------------------------------------------------------------ */
+
+/** Resolve a run-sheet step to its bank item (and whether it's still a placeholder). */
+function stepItem(step) {
+  const banks = { feud: FEUD_ROUNDS, poll: POLL_PRESETS, lyric: LYRIC_ROUNDS, noot: NOOT_ROUNDS, newlywed: NEWLYWED_ROUNDS }
+  for (const [key, bank] of Object.entries(banks)) {
+    if (step[key] !== undefined) {
+      const item = bank[step[key]]
+      return { key, item, placeholder: !item || JSON.stringify(item).includes('PASTE') }
+    }
+  }
+  return { key: step.bingo ? 'bingo' : null, item: step.bingo || null, placeholder: false }
+}
+
+function stepLabel(step) {
+  const { key, item, placeholder } = stepItem(step)
+  const name = GAME_BUTTONS[step.game] || step.game
+  if (placeholder) return `${name} — ✏️ needs content`
+  if (key === 'bingo') return `${item.mode === 'gifts' ? '🎁 Gift' : '🎱 Number'} Bingo — ${PATTERNS[item.pattern]?.label || item.pattern}`
+  const text = item?.question || item?.song || item?.snippet
+  return text ? `${name} — ${text}` : name
+}
+
+/** Switch game (with recap) and load the step's content in one go. */
+async function runStep(step, index, state) {
+  await switchGame(step.game, state)
+  const { key, item, placeholder } = stepItem(step)
+  if (!placeholder && item) {
+    if (key === 'feud') await loadFeudRound(item.question, item.answers, null, item.decoys || [])
+    if (key === 'poll') await openPoll(item.question, item.options)
+    if (key === 'lyric') await loadLyric(item.snippet, item.answer, item.audio || '', item.cutAt || 0)
+    if (key === 'noot') await loadNootRound(item)
+    if (key === 'newlywed') await loadNewlywedRound(item)
+    if (key === 'bingo') await newBingoGame(item.pattern || 'line', item.mode || 'numbers')
+  }
+  if (step.game === GAMES.CHEER) await resetCheer()
+  await setRunStep(index)
+}
+
+/**
+ * The evening in order (RUN_SHEET in rounds.js): one big ▶ Next button that
+ * switches game AND loads its content, the host's cue for the current step,
+ * and the full list to jump around. The game grid below still works for
+ * going off-script.
+ */
+function RunSheet({ state }) {
+  const [busy, setBusy] = useState(false)
+  if (!RUN_SHEET.length) return null
+  const current = state.runStep ?? -1
+  const now = RUN_SHEET[current]
+  const nextIndex = current + 1
+  const next = RUN_SHEET[nextIndex]
+
+  const go = async (index) => {
+    if (busy) return
+    setBusy(true)
+    try {
+      await runStep(RUN_SHEET[index], index, state)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section className="rounded-2xl bg-white/10 p-3 space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xs uppercase tracking-widest text-white/50">📋 Run sheet</h2>
+        <span className="text-xs text-white/50">
+          {current < 0 ? 'Not started' : `Step ${current + 1} of ${RUN_SHEET.length}`}
+        </span>
+      </div>
+
+      {now && (
+        <div className="space-y-1">
+          <p className="text-sm font-bold">Now: {stepLabel(now)}</p>
+          {now.note && <p className="text-sm text-yellow-200">💡 {now.note}</p>}
+        </div>
+      )}
+
+      {next ? (
+        <button
+          onClick={() => go(nextIndex)}
+          disabled={busy}
+          className="w-full rounded-xl bg-green-600 px-3 py-3 text-left font-bold disabled:opacity-50"
+        >
+          <span className="block text-xs font-normal text-white/80">{current < 0 ? '▶ Start the show' : '▶ Next'}</span>
+          <span className="block truncate">{stepLabel(next)}</span>
+        </button>
+      ) : (
+        <p className="text-sm text-center text-white/60">🎉 That's the whole run sheet!</p>
+      )}
+
+      <details>
+        <summary className="text-xs text-white/50 cursor-pointer">All steps</summary>
+        <ol className="pt-2 space-y-1">
+          {RUN_SHEET.map((step, i) => (
+            <li
+              key={i}
+              className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs ${
+                i === current ? 'bg-green-800/70' : i < current ? 'text-white/40' : 'bg-white/5'
+              }`}
+            >
+              <span className="w-5 text-right">{i < current ? '✓' : i + 1}</span>
+              <span className="flex-1 truncate">{stepLabel(step)}</span>
+              <button
+                onClick={() => go(i)}
+                disabled={busy}
+                className="rounded bg-white/15 px-2 py-0.5 font-bold"
+              >
+                {i === current ? 'Redo' : 'Go'}
+              </button>
+            </li>
+          ))}
+        </ol>
+        {current >= 0 && (
+          <button onClick={() => setRunStep(-1)} className="mt-2 text-xs text-white/40 underline">
+            Reset run sheet to the start
+          </button>
+        )}
+      </details>
+    </section>
   )
 }
 

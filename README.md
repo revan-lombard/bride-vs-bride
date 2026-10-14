@@ -97,6 +97,12 @@ Add `?rehearsal=1` to any game URL (e.g. `#/host?rehearsal=1`, `#/display?rehear
 4. **🗨️ Who said it?:** a quote (or "Who is more likely to…?"). Everyone votes Melissa or Calista. If the bank entry has no answer, the host taps "It was Melissa / Calista" to reveal.
 5. **✨ Reveal & score:** each team earns up to 10 points scaled by the *share* of its guessers who got it right (fair with uneven teams). Each correct guesser earns 5 personal points.
 
+## 📋 Run sheet (the host's ▶ Next button)
+
+The top of the host panel shows the evening in order. **▶ Start the show / ▶ Next** switches to the next game *and* loads its content in one tap: the Feud board, the poll, the bride question, the bingo deal. A 💡 cue tells you what to do on that step. Open **All steps** to see your progress (✓) or **Go** to any step. Your place is saved in the database, so reloading the host page or using a second device keeps it. The game buttons below still work for going off-script.
+
+Edit the order in `RUN_SHEET` at the bottom of `src/lib/rounds.js`. Each step names a game and which bank item to load (`feud: 0` = the first Feud round, `bingo: { mode: 'gifts', pattern: 'line' }`, …) plus an optional `note`. Steps whose content is still a `PASTE:` placeholder switch to that game but load nothing ("✏️ needs content"), so use ✍️ Manual entry there.
+
 ## 📊 Round recaps
 
 When you switch away from a game where points changed, the TV shows a recap for about 7 seconds before the next game's title:
@@ -143,7 +149,7 @@ Phones have a row of emojis along the bottom (😂 ❤️ 🎉 👏 😱 🔥 �
 ## Running the show (day-of checklist)
 
 1. Open `/#/display` on the TV and **click the page once** — a yellow "click to turn on sound" prompt shows until you do (browsers block audio until then).
-2. Open `/#/host` on your phone/laptop. (Practising beforehand? Use rehearsal mode — see above.)
+2. Open `/#/host` on your phone/laptop and work down the **📋 Run sheet** with ▶ Next. (Practising beforehand? Use rehearsal mode — see above.)
 3. Guests scan the QR code shown in the LOBBY screen (or from the host panel).
 4. Switch games from the host panel — every phone follows automatically.
 5. **Feud rounds:** load a round (survey results page, content bank, or paste `Question` + `answer | points` lines), then arm the buzzers. Guests see the question + options on their phones; the buzz winner picks on their phone and the board auto-reveals a hit (or auto-strikes a miss) with the sound cue. Re-arm for the next guess; award the revealed total with the 🏆 buttons. Manual tap-to-reveal and ✕ buttons still work as an override.

@@ -139,6 +139,9 @@ export const DEFAULT_STATE = {
   // Snapshot taken whenever the host switches game, so the next switch can
   // say what that game was worth: { game, scores, points: { [playerId]: n } }
   gameStart: null,
+  // Host run sheet position: index into RUN_SHEET (-1 = not started).
+  // Shared, so a host reload or a second host device keeps its place.
+  runStep: -1,
   // Between-games recap on the TV (and a toast on phones). See buildRecap.
   recap: null,
   // Countdown shown big on the TV. { duration, endsAt } — visual only,

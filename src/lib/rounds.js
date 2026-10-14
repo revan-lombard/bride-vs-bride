@@ -290,3 +290,35 @@ export const NEWLYWED_ROUNDS = [
     answer: 'B',
   },
 ]
+
+/**
+ * The evening's order for the host's ▶ Next button. Each step switches to
+ * `game` and loads one item from the banks above (by position, counting
+ * from 0), so the host never hunts for content mid-show:
+ *
+ *   feud: 0        → FEUD_ROUNDS[0]          poll: 1   → POLL_PRESETS[1]
+ *   lyric: 2       → LYRIC_ROUNDS[2]         noot: 0   → NOOT_ROUNDS[0]
+ *   newlywed: 3    → NEWLYWED_ROUNDS[3]
+ *   bingo: { mode: 'gifts' | 'numbers', pattern: 'line' | 'twoLines' | 'corners' | 'full' }
+ *   (CHEER, LOBBY and WINNER need nothing loaded)
+ *
+ * `note` is the host's cue for that step. Reorder, delete or repeat steps
+ * freely; steps whose content is still a PASTE: placeholder switch game but
+ * load nothing (use ✍️ Manual entry there).
+ */
+export const RUN_SHEET = [
+  { game: 'LOBBY', note: 'Welcome everyone — get them scanning the QR code. Check the team counts in 👥.' },
+  { game: 'CHEER', note: 'Warm-up! Tap Start, then hype the room for 10 seconds.' },
+  { game: 'FEUD', feud: 0, note: 'Read the question out, then Arm buzzers. Re-arm after each guess.' },
+  { game: 'NEWLYWED', newlywed: 0, note: 'Brides answer secretly (👰 marked in players). Reveal once both are 🔒.' },
+  { game: 'POLL', poll: 0, note: 'Give them ~20s (⏱ timer), Close voting, then 📊 Show results.' },
+  { game: 'BINGO', bingo: { mode: 'gifts', pattern: 'line' }, note: 'Gift Bingo while the presents are opened — tap each gift on the grid.' },
+  { game: 'FEUD', feud: 1, note: 'Second Feud board. Arm buzzers after reading the question.' },
+  { game: 'NEWLYWED', newlywed: 1, note: 'Another secret bride answer.' },
+  { game: 'NEWLYWED', newlywed: 5, note: 'Who said it? — everyone votes, then Reveal.' },
+  { game: 'LYRIC', lyric: 0, note: 'Play the track on the TV, arm buzzers, judge with ✅ +5 / +10.' },
+  { game: 'NOOT', noot: 0, note: 'Play the clip, arm buzzers — the winner picks the song.' },
+  { game: 'CHEER', note: 'Final showdown! Last chance to catch up.' },
+  { game: 'BINGO', bingo: { mode: 'numbers', pattern: 'full' }, note: 'Number bingo for a full house — try ⏩ Auto-draw.' },
+  { game: 'WINNER', note: 'The big reveal: team winner, then the MVP. Thank everyone! 🥂' },
+]
