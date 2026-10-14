@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { GAMES, TEAMS, loadPlayer, savePlayer, clearPlayer, isMe } from '../lib/schema'
+import { GAMES, TEAMS, loadPlayer, savePlayer, clearPlayer, isMe, brideTeamOf, brideName, whoSaidText } from '../lib/schema'
 import { THEME } from '../lib/theme'
 import {
   buzz as sendBuzz,
@@ -8,6 +8,9 @@ import {
   submitNootGuess,
   claimBingo,
   registerPlayer,
+  setBrideAnswer,
+  castNewlywedGuess,
+  NEWLYWED_PERSONAL_POINTS,
 } from '../lib/gameActions'
 import {
   BINGO_LETTERS,
@@ -28,6 +31,8 @@ import { playCue, vibrate, isMuted, setMuted, unlockAudio } from '../lib/sounds'
 import BingoBall from '../components/BingoBall'
 import { ReconnectOverlay } from '../components/ConnectionStatus'
 import { ReactionBar } from '../components/Reactions'
+import InstallButton from '../components/InstallButton'
+import { useWakeLock } from '../hooks/useWakeLock'
 
 /** Buzz with feedback: a tap click, then a happy chirp + buzz if you won. */
 async function buzz(player) {
@@ -47,6 +52,7 @@ async function buzz(player) {
  */
 export default function GuestView({ state, connected }) {
   const [player, setPlayer] = useState(loadPlayer)
+  useWakeLock()
   const removed = useRosterSync(player, setPlayer, state, connected)
 
   if (!player) return <JoinScreen onJoin={setPlayer} removed={removed} />
@@ -60,7 +66,12 @@ export default function GuestView({ state, connected }) {
       <header className={`${teamColor} px-4 py-3 flex items-center justify-between`}>
         <div>
           <div className="font-bold">{player.userName}</div>
-          <div className="text-xs text-white/80">{TEAMS[player.team].label}</div>
+          <div className="text-xs text-white/80">
+            {TEAMS[player.team].label}
+            {state.players?.[player.id]?.points > 0 && (
+              <span className="ml-2 text-yellow-300 font-bold">⭐ {state.players[player.id].points} pts</span>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <MuteButton />
@@ -94,6 +105,13 @@ export default function GuestView({ state, connected }) {
         )}
         {state.currentGame === GAMES.BINGO && (
           <BingoPad player={player} bingoState={state.bingoState} />
+        )}
+        {state.currentGame === GAMES.NEWLYWED && (
+          <NewlywedPad
+            player={player}
+            role={state.players?.[player.id]?.role}
+            nw={state.newlywedState}
+          />
         )}
         {state.currentGame === GAMES.WINNER && (
           <Splash text="🏆 Final scores are on the TV — thanks for playing! 🥂" />
@@ -192,6 +210,7 @@ function JoinScreen({ onJoin, removed }) {
       >
         Join the party 🎉
       </button>
+      <InstallButton />
     </div>
   )
 }
@@ -572,6 +591,114 @@ function BingoPad({ player, bingoState }) {
           {win ? 'BINGO! 🎉' : gifts ? 'Tap gifts as they’re opened' : 'Tap numbers as they’re called'}
         </button>
       )}
+    </div>
+  )
+}
+
+/**
+ * Bride Knows Best. Brides (marked by the host in the roster) secretly pick
+ * their own answer; everyone else predicts what their team's bride picked —
+ * or, in "Who said it?" rounds, which bride it was.
+ */
+function NewlywedPad({ player, role, nw }) {
+  const { kind, question, options = [], guesses, brideAnswers, revealed, answer, results } = nw || {}
+  const myBrideTeam = brideTeamOf(role) // set if this phone IS a bride
+  const whosaid = kind === 'whosaid'
+
+  if (!question) return <Splash text="💑 Bride Knows Best — get ready…" />
+
+  const pick = (fn) => {
+    playCue('tap')
+    vibrate(20)
+    fn()
+  }
+
+  // ---- the brides themselves ----
+  if (myBrideTeam) {
+    if (whosaid) {
+      return (
+        <div className="text-center space-y-4 max-w-sm">
+          <div className="text-6xl">😉</div>
+          <h2 className="text-xl font-bold">{whoSaidText(question)}</h2>
+          <p className="text-white/70">You know this one — sit back and watch them guess!</p>
+        </div>
+      )
+    }
+    const mine = brideAnswers?.[myBrideTeam]
+    return (
+      <div className="w-full max-w-sm space-y-4">
+        <p className="text-center text-sm text-yellow-300 font-bold">🤫 Secret answer — keep your screen hidden!</p>
+        <h2 className="text-2xl font-bold text-center">{question}</h2>
+        <div className="space-y-2">
+          {options.map((o) => (
+            <button
+              key={o}
+              disabled={revealed}
+              onClick={() => pick(() => setBrideAnswer(myBrideTeam, o))}
+              className={`w-full rounded-xl py-4 text-lg font-bold transition ${
+                mine === o ? 'bg-white text-stage ring-4 ring-white/60' : 'bg-white/15 active:bg-white/30'
+              }`}
+            >
+              {o}
+            </button>
+          ))}
+        </div>
+        <p className="text-center text-white/60 text-sm">
+          {mine ? '🔒 Locked in — you can change it until the reveal' : 'Pick your answer'}
+        </p>
+      </div>
+    )
+  }
+
+  // ---- everyone else predicts ----
+  const myGuess = guesses?.[player.id]?.choice
+  const target = whosaid ? answer : brideAnswers?.[player.team]
+  const choices = whosaid ? ['teamA', 'teamB'] : options
+  const label = (c) => (whosaid ? brideName(c) : c)
+  const got = revealed && myGuess && myGuess === target
+
+  return (
+    <div className="w-full max-w-sm space-y-4">
+      <p className="text-center text-sm text-white/60">
+        {whosaid ? '🗨️ Who said it?' : `💑 What did ${brideName(player.team)} pick?`}
+      </p>
+      <h2 className="text-2xl font-bold text-center">{whosaid ? whoSaidText(question) : question}</h2>
+      <div className={whosaid ? 'grid grid-cols-2 gap-3' : 'space-y-2'}>
+        {choices.map((c) => {
+          const isTarget = revealed && c === target
+          return (
+            <button
+              key={c}
+              disabled={revealed}
+              onClick={() => pick(() => castNewlywedGuess(player, c))}
+              className={`w-full rounded-xl font-bold transition ${whosaid ? 'py-8 text-xl' : 'py-4 text-lg'} ${
+                isTarget
+                  ? 'bg-green-600 ring-4 ring-green-300'
+                  : myGuess === c
+                    ? 'bg-white text-stage ring-4 ring-white/60'
+                    : whosaid
+                      ? c === 'teamA'
+                        ? 'bg-bride-a-dark'
+                        : 'bg-bride-b-dark'
+                      : 'bg-white/15 active:bg-white/30'
+              } ${revealed && !isTarget && myGuess !== c ? 'opacity-40' : ''}`}
+            >
+              {label(c)} {isTarget && '✅'}
+            </button>
+          )
+        })}
+      </div>
+      <p className="text-center text-sm text-white/70">
+        {revealed
+          ? got
+            ? `🎉 You got it! +${NEWLYWED_PERSONAL_POINTS} MVP points · team +${results?.[player.team]?.points ?? 0}`
+            : myGuess
+              ? `😅 Not quite — it was ${label(target)}`
+              : `It was ${label(target)}`
+          : myGuess
+            ? 'Locked in — you can change until the reveal'
+            : 'Tap your guess'}
+      </p>
     </div>
   )
 }

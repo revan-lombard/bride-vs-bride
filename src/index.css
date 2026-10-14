@@ -134,3 +134,11 @@ body {
   40%      { transform: scale(1.35) rotate(-8deg); }
 }
 .animate-react-tap { animation: react-tap 0.3s ease-out; }
+
+/* MVP name slam-in */
+@keyframes splash-in {
+  0%   { transform: scale(2.2); opacity: 0; }
+  60%  { transform: scale(0.95); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.animate-splash-in { animation: splash-in 0.7s cubic-bezier(.2,.8,.3,1) both; }

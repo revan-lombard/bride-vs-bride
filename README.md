@@ -12,7 +12,7 @@ A real-time multi-game web app for a bridal kitchen tea. Guests scan a QR code a
 | `/#/survey` | Invitees (pre-event) | Multiple-choice survey sent with the invites — answers build the Feud boards |
 | `/#/survey-results` | Host | Live survey tallies, open/close toggle, one-tap "Use as Feud round" |
 
-Games: **LOBBY** (join screen), **FEUD** (Family Feud board with reveals + strikes), **POLL** (live voting with animated results), **LYRIC** (finish-the-lyric buzzer round), **NOOT** (Noot vir Noot guess-the-song), **BINGO** (Bridal Bingo with a tumbler on the TV), **WINNER** (final standings + confetti).
+Games: **LOBBY** (join screen), **FEUD** (Family Feud board with reveals + strikes), **POLL** (live voting with animated results), **LYRIC** (finish-the-lyric buzzer round), **NOOT** (Noot vir Noot guess-the-song), **BINGO** (Bridal Bingo with a tumbler on the TV), **NEWLYWED** (Bride Knows Best: secret bride answers + who-said-it), **WINNER** (final standings, MVP reveal + confetti).
 
 ## Stack
 
@@ -88,6 +88,26 @@ Everything is synthesized in the browser (`src/lib/sounds.js`) — no audio file
 Add `?rehearsal=1` to any game URL (e.g. `#/host?rehearsal=1`, `#/display?rehearsal=1`), or tap **🧪 Switch to rehearsal** under ⚙️ Setup on the host panel. Everything — scores, buzzers, roster, bingo — then runs against a separate `/game-test` copy, so the live game is never touched. An amber "REHEARSAL" strip shows on every screen, the QR code automatically points guests at the rehearsal, and the mode sticks for that browser tab until you switch back.
 
 > **One-time:** re-publish the rules from `docs/firebase-rules.json` in the Firebase console — they now include the `game-test` path. Without it rehearsal writes are refused.
+
+## Bride Knows Best (Newlywed + Who said it?)
+
+1. **Mark the brides:** on the host panel open 👥 players and tap 👰 on Melissa's phone (once = Melissa, twice = Calista, three times = back to a normal guest).
+2. Switch to **NEWLYWED** and tap a round from the bank (`NEWLYWED_ROUNDS` in `src/lib/rounds.js`, or ✍️ Manual entry).
+3. **💑 Bride rounds:** each bride's phone shows a 🤫 secret-answer pad. Everyone else sees "What did *your* bride pick?" and guesses. The TV shows 🔒 as each bride locks in. If a bride has no phone, the host can enter her answer ("Enter her answer for her").
+4. **🗨️ Who said it?:** a quote (or "Who is more likely to…?"). Everyone votes Melissa or Calista. If the bank entry has no answer, the host taps "It was Melissa / Calista" to reveal.
+5. **✨ Reveal & score:** each team earns up to 10 points scaled by the *share* of its guessers who got it right (fair with uneven teams). Each correct guesser earns 5 personal points.
+
+## MVP & personal points
+
+Every guest now has personal points, shown as ⭐ in their phone header and in the host roster. They come from correct Feud picks, Noot vir Noot songs, bingo wins, Bride Knows Best guesses, and Lyric answers. For Lyric, tap **✅ +5 / +10 to {name}** when the buzz winner gets it right. This also awards their team, so you don't need the score buttons.
+
+The **🏆 WINNER** screen reveals the result in three beats: the winning team, then a 🥁 drumroll "And your MVP is…", then the MVP with the runners-up, **⚡ Fastest Finger** (most buzz wins) and **📣 Hype Queen** (most emoji reactions).
+
+## Install & offline
+
+- **Add to home screen:** Android/Chrome shows a **📲 Add to home screen** button on the join screen (and under ⚙️ Setup on the host panel). iPhones show the Share → Add to Home Screen tip. Installed, it opens full-screen with no browser bars.
+- **Offline app shell:** a service worker keeps the app's files on each device, so a page reload during a Wi-Fi blip still opens the app (it then shows "Reconnecting…" until the network returns). Live game data still needs a connection.
+- **Screens stay awake:** phones, the host panel and the TV ask the browser to keep the screen on while open. A sleeping phone drops its connection and a sleeping host stops bingo auto-draw.
 
 ## Emoji reactions
 

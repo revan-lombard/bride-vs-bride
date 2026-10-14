@@ -14,6 +14,14 @@ import { nextBall, PATTERNS } from './bingo'
 
 const game = (path = '') => ref(db, path ? `${GAME_ROOT}/${path}` : GAME_ROOT)
 
+/**
+ * Personal points (for the MVP reveal) ride along in the same multi-path
+ * update as the team score, so the two can never drift apart.
+ */
+const credit = (updates, playerId, points) => {
+  if (playerId && points) updates[`players/${playerId}/points`] = increment(points)
+}
+
 /* ------------------------------------------------------------------ */
 /* Host actions                                                        */
 /* ------------------------------------------------------------------ */
@@ -32,6 +40,19 @@ export const unlockBuzzers = () =>
   set(game('buzzerState'), { isUnlocked: true, firstBuzzed: null })
 
 export const lockBuzzers = () => set(game('buzzerState/isUnlocked'), false)
+
+/**
+ * Host judges a buzz answer correct (games without phone picking, e.g.
+ * Finish the Lyric): points to the team AND the person, buzzers reset.
+ */
+export function awardBuzzWinner(firstBuzzed, points) {
+  const updates = {
+    [`scores/${firstBuzzed.team}`]: increment(points),
+    buzzerState: { isUnlocked: false, firstBuzzed: null },
+  }
+  credit(updates, firstBuzzed.playerId, points)
+  return update(game(), updates)
+}
 
 export const openPoll = (question, options) =>
   set(game('pollState'), {
@@ -86,6 +107,9 @@ export const renamePlayer = (id, userName) => set(game(`players/${id}/userName`)
 
 export const movePlayer = (id, team) => set(game(`players/${id}/team`), team)
 
+/** Mark a player as one of the brides (their phone gets the secret-answer pad). */
+export const setPlayerRole = (id, role) => set(game(`players/${id}/role`), role || null)
+
 /** Sends the guest back to the join screen (they can rejoin fresh). */
 export const removePlayer = (id) => update(game(`players/${id}`), { kicked: true, online: false })
 
@@ -131,6 +155,8 @@ export async function buzz(player) {
       }
     }
   )
+  // Buzz wins feed the "fastest finger" award on the winner screen.
+  if (result.committed) update(game(`players/${player.id}`), { buzzes: increment(1) })
   return result.committed
 }
 
@@ -183,6 +209,7 @@ export function submitFeudGuess(player, choice, feudState) {
     updates[`scores/${player.team}`] = increment(
       feudState.answers[idx].points || 0
     )
+    credit(updates, player.id, feudState.answers[idx].points || 0)
   } else {
     updates['feudState/strikes'] = Math.min((feudState.strikes || 0) + 1, 3)
   }
@@ -233,6 +260,7 @@ export function submitNootGuess(player, choice, nootState) {
   if (correct) {
     updates['nootState/revealed'] = true
     updates[`scores/${player.team}`] = increment(nootState.points || 10)
+    credit(updates, player.id, nootState.points || 10)
   } else {
     updates['nootState/wrongGuesses'] = [
       ...(nootState.wrongGuesses || []),
@@ -306,7 +334,9 @@ export async function claimBingo(player, cells, bingoState) {
     }
   })
   if (result.committed && points) {
-    await update(game(), { [`scores/${player.team}`]: increment(points) })
+    const updates = { [`scores/${player.team}`]: increment(points) }
+    credit(updates, player.id, points)
+    await update(game(), updates)
   }
   return result.committed
 }
@@ -318,3 +348,60 @@ export const continueBingo = (bingoState, nextPattern) =>
     winner: null,
     pattern: nextPattern,
   })
+
+/* ------------------------------------------------------------------ */
+/* Bride Knows Best (Newlywed / Who said it?)                          */
+/* ------------------------------------------------------------------ */
+
+/** Points each correct guesser earns towards MVP. */
+export const NEWLYWED_PERSONAL_POINTS = 5
+
+export const loadNewlywedRound = (round) =>
+  set(game('newlywedState'), {
+    kind: round.kind || 'bride',
+    question: round.question,
+    options: round.kind === 'whosaid' ? [] : round.options || [],
+    answer: round.answer === 'A' ? 'teamA' : round.answer === 'B' ? 'teamB' : null,
+    brideAnswers: null,
+    guesses: null,
+    points: round.points || 10,
+    revealed: false,
+    results: null,
+  })
+
+/** A bride locks in her secret answer (changeable until the reveal). */
+export const setBrideAnswer = (team, choice) => set(game(`newlywedState/brideAnswers/${team}`), choice)
+
+export const castNewlywedGuess = (player, choice) =>
+  set(game(`newlywedState/guesses/${player.id}`), {
+    userName: player.userName,
+    team: player.team,
+    choice,
+  })
+
+/**
+ * Reveal and score in one go. Each team earns up to `points` scaled by the
+ * share of its guessers who were right (so a big team can't out-vote a
+ * small one); every correct guesser gets personal MVP points. Bride
+ * rounds: a team guesses its own bride. Who-said-it: everyone guesses the
+ * same answer. A transaction on `revealed` stops a double-tap scoring twice.
+ */
+export async function revealNewlywed(nw, answerOverride = null) {
+  const answer = answerOverride || nw.answer
+  const lock = await runTransaction(game('newlywedState/revealed'), (r) => (r ? undefined : true))
+  if (!lock.committed) return
+  const guesses = Object.entries(nw.guesses || {})
+  const updates = { 'newlywedState/answer': answer || null }
+  const results = {}
+  for (const team of ['teamA', 'teamB']) {
+    const target = nw.kind === 'whosaid' ? answer : nw.brideAnswers?.[team]
+    const voters = guesses.filter(([, g]) => g.team === team)
+    const right = voters.filter(([, g]) => target && g.choice === target)
+    const points = voters.length ? Math.round(((nw.points || 10) * right.length) / voters.length) : 0
+    results[team] = { correct: right.length, voters: voters.length, points }
+    if (points) updates[`scores/${team}`] = increment(points)
+    right.forEach(([id]) => credit(updates, id, NEWLYWED_PERSONAL_POINTS))
+  }
+  updates['newlywedState/results'] = results
+  return update(game(), updates)
+}

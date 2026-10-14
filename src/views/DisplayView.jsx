@@ -8,7 +8,9 @@ import { appUrl } from '../lib/mode'
 import { OfflinePill } from '../components/ConnectionStatus'
 import { ReactionLayer } from '../components/Reactions'
 import BingoDisplay from '../components/BingoDisplay'
-import Confetti from '../components/Confetti'
+import NewlywedDisplay from '../components/NewlywedDisplay'
+import WinnerDisplay from '../components/WinnerDisplay'
+import { useWakeLock } from '../hooks/useWakeLock'
 
 /**
  * The TV / projector view (16:9). Read-only — it just renders the shared
@@ -17,6 +19,7 @@ import Confetti from '../components/Confetti'
 export default function DisplayView({ state, connected }) {
   useSoundCues(state?.soundCue)
   useGameSounds(state)
+  useWakeLock()
   const [audioOn, setAudioOn] = useState(isAudioUnlocked)
   // Karaoke audio: filename -> object URL, picked from a local folder once.
   // Lives here (not in LyricScreen) so switching games doesn't drop it.
@@ -56,8 +59,9 @@ export default function DisplayView({ state, connected }) {
         )}
 
         {state.currentGame === GAMES.BINGO && <BingoDisplay bingoState={state.bingoState} />}
+        {state.currentGame === GAMES.NEWLYWED && <NewlywedDisplay nw={state.newlywedState} />}
 
-        {state.currentGame === GAMES.WINNER && <WinnerScreen scores={state.scores} />}
+        {state.currentGame === GAMES.WINNER && <WinnerDisplay scores={state.scores} players={state.players} />}
 
         <BuzzOverlay buzzerState={state.buzzerState} compact={compactBuzz} />
       </main>
@@ -114,33 +118,6 @@ function useTimerSounds(endsAt, remaining) {
     if (remaining > 0 && remaining <= 5) playCue('tick')
     if (remaining === 0) playCue('timesUp')
   }, [endsAt, remaining])
-}
-
-/** Final standings with CSS confetti — switch here to end the show. */
-function WinnerScreen({ scores }) {
-  const teams = Object.values(TEAMS)
-  const a = scores?.teamA ?? 0
-  const b = scores?.teamB ?? 0
-  const tie = a === b
-  const winner = a >= b ? TEAMS.teamA : TEAMS.teamB
-
-  return (
-    <div className="text-center space-y-8 relative">
-      <Confetti />
-      <div className="text-8xl">{tie ? '🤝' : '👑'}</div>
-      <h1 className="text-6xl font-extrabold">
-        {tie ? "It's a tie!" : `${winner.label} wins!`}
-      </h1>
-      <div className="flex justify-center gap-12 text-3xl font-bold">
-        {teams.map((t) => (
-          <span key={t.id} className={t.id === 'teamA' ? 'text-bride-a' : 'text-bride-b'}>
-            {t.label}: {scores?.[t.id] ?? 0}
-          </span>
-        ))}
-      </div>
-      <p className="text-2xl text-white/70">Thank you for playing! 🥂</p>
-    </div>
-  )
 }
 
 const toUrlMap = (files) =>

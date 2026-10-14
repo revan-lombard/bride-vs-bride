@@ -32,6 +32,10 @@ What's built, what's worth adding, and what would take the show to the next leve
 - **Emoji reactions** (built 2026-10-14, roadmap #25): phone emoji bar → floating emojis + names on the TV, per-team sides, 0.6s cooldown, host on/off toggle. Stored at `/reactions/{root}/{playerId}` (one slot + counter per guest) so taps don't resync `/game`.
 - **Gift Bingo** (built 2026-10-14): second bingo mode with gift-word cards (`GIFT_WORDS` in rounds.js); host taps gifts as opened (undoable), TV "just opened" + gift board, same marking/claim/scoring as number bingo.
 
+- **Bride Knows Best** (built 2026-10-14, roadmap #8 Newlywed + Who said it?): NEWLYWED game with bride rounds (secret answers on the brides' phones via roster 👰 role, or host-entered; each team predicts its own bride) and who-said-it rounds; share-based team scoring, personal points for correct guessers; TV lock-in/reveal panels and vote split.
+- **Personal points + MVP** (built 2026-10-14, roadmap #10): `players/{id}/points` credited in the same multi-path update as team scores (Feud, Noot, Bingo, Newlywed, host "+N to buzz winner" for Lyric); `buzzes` counter; ⭐ on phones and roster; three-beat winner reveal with MVP, podium, Fastest Finger and Hype Queen.
+- **PWA** (built 2026-10-14, roadmap #28): manifest + icons, service worker caching the app shell (network-first HTML, cache-first hashed assets, precached at install), install button / iOS hint, screen wake lock on all game views.
+
 ---
 
 ## 📋 Built: pre-event Feud survey (multiple choice)

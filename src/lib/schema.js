@@ -12,6 +12,7 @@ export const GAMES = {
   LYRIC: 'LYRIC',
   NOOT: 'NOOT',
   BINGO: 'BINGO',
+  NEWLYWED: 'NEWLYWED',
   WINNER: 'WINNER',
 }
 
@@ -23,6 +24,7 @@ export const GAME_TITLES = {
   LYRIC: '🎵 Finish the Lyric',
   NOOT: '🎶 Noot vir Noot',
   BINGO: '🎱 Bridal Bingo',
+  NEWLYWED: '💑 Bride Knows Best',
   WINNER: '🏆 And the winner is…',
 }
 
@@ -111,10 +113,23 @@ export const DEFAULT_STATE = {
   // Emoji reactions bar on phones (the reactions themselves live outside
   // /game at /reactions/{root}/{playerId} so they don't resync everything).
   reactionsOn: true,
-  // Who has joined: { [playerId]: { userName, team, online, joinedAt, kicked? } }
+  // Who has joined: { [playerId]: { userName, team, online, joinedAt, kicked?,
+  //   points (personal, for the MVP), buzzes (buzz wins), role? ('brideA'|'brideB') } }
   // Guests write their own entry (online flips false on disconnect); the
   // host can rename, move or remove (kicked) players from the roster.
   players: null,
+  // Bride Knows Best (Newlywed / Who said it?). See NEWLYWED_ROUNDS.
+  newlywedState: {
+    kind: 'bride', // 'bride' | 'whosaid'
+    question: '',
+    options: [], // 'bride' rounds only; 'whosaid' choices are the two brides
+    answer: null, // 'whosaid': 'teamA' | 'teamB'
+    brideAnswers: null, // 'bride': { teamA: option, teamB: option } — secret until reveal
+    guesses: null, // { [playerId]: { userName, team, choice } }
+    points: 10, // max per team, scaled by the share who got it right
+    revealed: false,
+    results: null, // { teamA: { correct, voters, points }, teamB: {…} }
+  },
   // Countdown shown big on the TV. { duration, endsAt } — visual only,
   // the host still locks buzzers / closes polls themselves.
   timer: null,
@@ -124,6 +139,15 @@ export const DEFAULT_STATE = {
   // from state changes on the display, so they don't go through here.
   soundCue: null,
 }
+
+/** Which bride a roster role belongs to: 'brideA' → 'teamA'. */
+export const brideTeamOf = (role) => (role === 'brideA' ? 'teamA' : role === 'brideB' ? 'teamB' : null)
+
+/** The bride's display name for a team key. */
+export const brideName = (team) => (team === 'teamA' ? THEME.brideA : THEME.brideB)
+
+/** Who-said-it text: quotes get quote marks, "Who is more likely…?" questions don't. */
+export const whoSaidText = (q = '') => (q.trim().endsWith('?') ? q : `“${q}”`)
 
 /** Did this player win the buzz? (By id; name fallback for old buzz records.) */
 export const isMe = (who, player) =>

@@ -241,3 +241,48 @@ export const GIFT_WORDS = [
   'Salad bowl', 'Placemats', 'Ice trays', 'Candles', 'Wine', 'Gift voucher',
   'Kitchen scale',
 ]
+
+/**
+ * Bride Knows Best (Newlywed game) — two kinds of round:
+ *
+ *  kind 'bride':   both brides answer secretly on their phones (or the host
+ *                  enters it); each team predicts what THEIR bride picked.
+ *  kind 'whosaid': a quote or "who is more likely to…" with a known answer
+ *                  ('A' = brideA, 'B' = brideB); everyone votes.
+ *
+ * Teams score up to `points` by the share of their guessers who got it
+ * right (fair with uneven teams); each correct guesser earns MVP points.
+ * Placeholders — swap in the real questions and quotes.
+ */
+export const NEWLYWED_ROUNDS = [
+  {
+    kind: 'bride',
+    question: 'Dream honeymoon destination',
+    options: ['Mauritius', 'Paris', 'Bali', 'A game lodge', 'Road trip'],
+  },
+  {
+    kind: 'bride',
+    question: 'Perfect date night',
+    options: ['Fancy dinner', 'Couch + movie', 'Wine farm', 'Hike + picnic'],
+  },
+  {
+    kind: 'bride',
+    question: 'Who does the dishes?',
+    options: [THEME.brideA, THEME.brideB, 'Nobody — paper plates', 'The dishwasher'],
+  },
+  {
+    kind: 'bride',
+    question: 'First thing she notices about someone',
+    options: ['Smile', 'Eyes', 'Shoes', 'Sense of humour'],
+  },
+  {
+    kind: 'whosaid',
+    question: 'PASTE: a quote one of the brides actually said',
+    answer: 'A',
+  },
+  {
+    kind: 'whosaid',
+    question: 'Who is more likely to cry at the vows?',
+    answer: 'B',
+  },
+]

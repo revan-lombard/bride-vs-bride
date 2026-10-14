@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { GAMES, TEAMS, MAX_STRIKES, BUZZER_GAMES } from '../lib/schema'
+import { GAMES, TEAMS, MAX_STRIKES, BUZZER_GAMES, brideName, brideTeamOf } from '../lib/schema'
 import { THEME } from '../lib/theme'
-import { FEUD_ROUNDS, POLL_PRESETS, LYRIC_ROUNDS, NOOT_ROUNDS } from '../lib/rounds'
+import { FEUD_ROUNDS, POLL_PRESETS, LYRIC_ROUNDS, NOOT_ROUNDS, NEWLYWED_ROUNDS } from '../lib/rounds'
 import {
   setCurrentGame,
   adjustScore,
   unlockBuzzers,
   lockBuzzers,
+  awardBuzzWinner,
   openPoll,
   closePoll,
   showPollResults,
@@ -28,6 +29,10 @@ import {
   renamePlayer,
   movePlayer,
   removePlayer,
+  setPlayerRole,
+  loadNewlywedRound,
+  setBrideAnswer,
+  revealNewlywed,
   startTimer,
   clearTimer,
   triggerSound,
@@ -40,12 +45,15 @@ import { CUE_NAMES } from '../lib/sounds'
 import BingoBall from '../components/BingoBall'
 import { appUrl, IS_REHEARSAL, switchMode } from '../lib/mode'
 import { OfflinePill } from '../components/ConnectionStatus'
+import InstallButton from '../components/InstallButton'
+import { useWakeLock } from '../hooks/useWakeLock'
 
 /**
  * Host control panel — phone/laptop friendly. Everything is a direct write
  * to the shared state; guests and the display react instantly.
  */
 export default function HostView({ state, connected }) {
+  useWakeLock()
   if (!state) return <p className="p-8 text-center">Connecting…</p>
 
   const guestUrl = appUrl('/')
@@ -107,7 +115,7 @@ export default function HostView({ state, connected }) {
 
       {BUZZER_GAMES.includes(state.currentGame) && (
         <Section title="Buzzers">
-          <BuzzerControls buzzerState={state.buzzerState} />
+          <BuzzerControls buzzerState={state.buzzerState} canAward={state.currentGame === GAMES.LYRIC} />
         </Section>
       )}
 
@@ -132,6 +140,12 @@ export default function HostView({ state, connected }) {
       {state.currentGame === GAMES.NOOT && (
         <Section title="Noot vir Noot">
           <NootControls nootState={state.nootState} />
+        </Section>
+      )}
+
+      {state.currentGame === GAMES.NEWLYWED && (
+        <Section title="Bride Knows Best">
+          <NewlywedControls nw={state.newlywedState} players={state.players} />
         </Section>
       )}
 
@@ -203,6 +217,7 @@ export default function HostView({ state, connected }) {
             <QRCodeSVG value={guestUrl} size={96} />
             <code className="text-stage text-xs break-all">{guestUrl}</code>
           </div>
+          <InstallButton className="w-full" />
           <div className="rounded-xl bg-amber-400/15 p-3 space-y-2 text-sm">
             <p>
               {IS_REHEARSAL
@@ -254,7 +269,7 @@ function Section({ title, children }) {
   )
 }
 
-function BuzzerControls({ buzzerState }) {
+function BuzzerControls({ buzzerState, canAward }) {
   const { isUnlocked, firstBuzzed } = buzzerState || {}
   return (
     <div className="space-y-2">
@@ -283,6 +298,22 @@ function BuzzerControls({ buzzerState }) {
           'Buzzers locked'
         )}
       </div>
+      {canAward && firstBuzzed && (
+        <div className="flex gap-2">
+          {[5, 10].map((pts) => (
+            <button
+              key={pts}
+              onClick={() => awardBuzzWinner(firstBuzzed, pts)}
+              className="flex-1 rounded-lg bg-green-700 py-2 text-sm font-bold"
+            >
+              ✅ +{pts} to {firstBuzzed.userName}
+            </button>
+          ))}
+          <button onClick={unlockBuzzers} className="flex-1 rounded-lg bg-red-900/70 py-2 text-sm font-bold">
+            ❌ Wrong — re-arm
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -685,6 +716,9 @@ function BingoControls({ bingoState }) {
   )
 }
 
+/** 👰 button cycles: guest → bride A → bride B → guest. */
+const ROLE_CYCLE = { '': 'brideA', brideA: 'brideB', brideB: null }
+
 /** Live list of who has joined, with fix-ups: rename, switch team, remove. */
 function Roster({ players }) {
   const list = Object.entries(players || {})
@@ -727,6 +761,7 @@ function Roster({ players }) {
             />
             <span className={`flex-1 truncate ${p.online === true ? '' : 'text-white/40'}`}>
               {p.userName}
+              {p.points > 0 && <span className="ml-1 text-xs text-yellow-300">⭐{p.points}</span>}
               {nameCount[p.userName.trim().toLowerCase()] > 1 && (
                 <span className="ml-1 text-xs text-yellow-300" title="Two players share this name">⚠️ same name</span>
               )}
@@ -736,6 +771,13 @@ function Roster({ players }) {
             >
               {TEAMS[p.team]?.label.replace('Team ', '')}
             </span>
+            <button
+              onClick={() => setPlayerRole(p.id, ROLE_CYCLE[p.role || ''])}
+              className={`rounded px-2 py-1 ${p.role ? 'bg-yellow-300 text-stage' : 'bg-white/10'}`}
+              title="Mark as bride (tap to cycle)"
+            >
+              👰{p.role && <span className="text-[10px] font-bold ml-0.5">{brideName(brideTeamOf(p.role)).slice(0, 3)}</span>}
+            </button>
             <button onClick={() => rename(p)} className="rounded bg-white/10 px-2 py-1" title="Rename">
               ✏️
             </button>
@@ -795,6 +837,165 @@ function GiftPicker({ drawn, onDeal }) {
       <p className="text-xs text-white/40">
         Gift not on the list? Nothing to tap — the words live in <code>GIFT_WORDS</code> in rounds.js.
       </p>
+    </div>
+  )
+}
+
+function NewlywedControls({ nw, players }) {
+  const [kind, setKind] = useState('bride')
+  const [question, setQuestion] = useState('')
+  const [optionsText, setOptionsText] = useState('')
+  const [answer, setAnswer] = useState('')
+  const { question: q, kind: k, options = [], brideAnswers, guesses, revealed, answer: known, results } = nw || {}
+  const whosaid = k === 'whosaid'
+  const brides = Object.values(players || {}).filter((p) => p?.role && !p.kicked)
+  const guessList = Object.values(guesses || {})
+  const count = (team) => guessList.filter((g) => g.team === team).length
+  const bothAnswered = brideAnswers?.teamA && brideAnswers?.teamB
+
+  const loadManual = () => {
+    if (!question.trim()) return
+    loadNewlywedRound({
+      kind,
+      question: question.trim(),
+      options: optionsText.split('\n').map((s) => s.trim()).filter(Boolean),
+      answer: answer || null,
+    })
+  }
+
+  return (
+    <div className="space-y-2">
+      <ContentBank
+        items={NEWLYWED_ROUNDS}
+        label={(r) => `${r.kind === 'whosaid' ? '🗨️' : '💑'} ${r.question}`}
+        onPick={loadNewlywedRound}
+      />
+      {brides.length < 2 && (
+        <p className="text-xs text-yellow-300">
+          Tip: open 👥 players and tap 👰 on each bride's phone so they can answer secretly. Or enter their answers below.
+        </p>
+      )}
+      <ManualEntry>
+        <div className="flex gap-2">
+          {[
+            ['bride', '💑 Brides answer'],
+            ['whosaid', '🗨️ Who said it?'],
+          ].map(([id, l]) => (
+            <button
+              key={id}
+              onClick={() => setKind(id)}
+              className={`flex-1 rounded-lg py-2 text-xs font-bold ${kind === id ? 'bg-white text-stage' : 'bg-white/15'}`}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+        <input
+          className="w-full rounded-lg bg-white/10 px-3 py-2 text-sm"
+          placeholder={kind === 'whosaid' ? 'The quote / "Who is more likely to…"' : 'Question, e.g. Dream honeymoon destination'}
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+        />
+        {kind === 'bride' ? (
+          <textarea
+            className="w-full rounded-lg bg-white/10 px-3 py-2 text-sm"
+            rows={4}
+            placeholder="One option per line"
+            value={optionsText}
+            onChange={(e) => setOptionsText(e.target.value)}
+          />
+        ) : (
+          <div className="flex gap-2 text-xs">
+            {[
+              ['A', brideName('teamA')],
+              ['B', brideName('teamB')],
+              ['', 'Decide at reveal'],
+            ].map(([v, l]) => (
+              <button
+                key={v}
+                onClick={() => setAnswer(v)}
+                className={`flex-1 rounded-lg py-2 font-bold ${answer === v ? 'bg-white text-stage' : 'bg-white/15'}`}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
+        )}
+        <button onClick={loadManual} className="w-full rounded-lg bg-green-700 py-2 font-bold">
+          Load round
+        </button>
+      </ManualEntry>
+
+      {q && (
+        <div className="bg-white/10 rounded-lg p-3 space-y-3 text-sm">
+          <p className="font-bold">
+            {whosaid ? '🗨️' : '💑'} {q}
+          </p>
+
+          {!whosaid &&
+            ['teamA', 'teamB'].map((team) => (
+              <div key={team} className="space-y-1">
+                <div className="flex justify-between">
+                  <span>👰 {brideName(team)}</span>
+                  <span className={brideAnswers?.[team] ? 'text-green-400' : 'text-white/50'}>
+                    {brideAnswers?.[team] ? `🔒 ${brideAnswers[team]}` : '⏳ thinking…'}
+                  </span>
+                </div>
+                {!revealed && (
+                  <details>
+                    <summary className="text-xs text-white/40 cursor-pointer">Enter her answer for her</summary>
+                    <div className="flex flex-wrap gap-1 pt-1">
+                      {options.map((o) => (
+                        <button
+                          key={o}
+                          onClick={() => setBrideAnswer(team, o)}
+                          className={`rounded px-2 py-1 text-xs ${brideAnswers?.[team] === o ? 'bg-white text-stage' : 'bg-white/15'}`}
+                        >
+                          {o}
+                        </button>
+                      ))}
+                    </div>
+                  </details>
+                )}
+              </div>
+            ))}
+
+          <p className="text-white/60">
+            Guesses: {TEAMS.teamA.label} {count('teamA')} · {TEAMS.teamB.label} {count('teamB')}
+          </p>
+
+          {revealed ? (
+            <div className="rounded-lg bg-green-900/60 p-2 space-y-1">
+              {whosaid && <p>It was <b>{brideName(known)}</b></p>}
+              {['teamA', 'teamB'].map((t) => (
+                <p key={t}>
+                  {TEAMS[t].label}: {results?.[t]?.correct ?? 0}/{results?.[t]?.voters ?? 0} right → +{results?.[t]?.points ?? 0}
+                </p>
+              ))}
+            </div>
+          ) : whosaid && !known ? (
+            <div className="flex gap-2">
+              {['teamA', 'teamB'].map((t) => (
+                <button
+                  key={t}
+                  onClick={() => revealNewlywed(nw, t)}
+                  className={`flex-1 rounded-lg py-3 font-bold ${t === 'teamA' ? 'bg-bride-a-dark' : 'bg-bride-b-dark'}`}
+                >
+                  ✨ It was {brideName(t)}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <button
+              onClick={() => revealNewlywed(nw)}
+              disabled={!whosaid && !bothAnswered}
+              className="w-full rounded-lg bg-green-700 py-3 font-bold disabled:opacity-40"
+            >
+              {!whosaid && !bothAnswered ? 'Waiting for both brides…' : '✨ Reveal & score'}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   )
 }

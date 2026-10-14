@@ -34,6 +34,11 @@ export function useGameSounds(state) {
     if (n.lyricAnswer && !p.lyricAnswer) playCue('correct')
     if (n.pollResults && !p.pollResults) playCue('drumroll')
     if (n.bingoWinner && !p.bingoWinner) playCue('bingo')
+    // Bride Knows Best: a pop as each bride locks in, fanfare on the reveal
+    if (n.nwQ === p.nwQ) {
+      if (n.nwLocked > p.nwLocked) playCue('pop')
+      if (n.nwRevealed && !p.nwRevealed) playCue('fanfare')
+    }
 
     // Scores: coin for points in, sad trombone-lite for points out. Delayed a
     // touch so it lands after the reveal ding rather than on top of it.
@@ -60,6 +65,9 @@ function snapshot(s) {
     lyricAnswer: Boolean(s.lyricState?.showAnswer),
     pollResults: Boolean(s.pollState?.showResults),
     bingoWinner: Boolean(s.bingoState?.winner),
+    nwQ: s.newlywedState?.question || '',
+    nwLocked: Object.values(s.newlywedState?.brideAnswers || {}).filter(Boolean).length,
+    nwRevealed: Boolean(s.newlywedState?.revealed),
     scoreA: s.scores?.teamA ?? 0,
     scoreB: s.scores?.teamB ?? 0,
   }
