@@ -99,7 +99,7 @@ Pattern points are in `PATTERNS` in `src/lib/bingo.js`.
 
 ### Gift Bingo (the kitchen-tea classic)
 
-Pick **🎁 Gifts** before dealing. Cards hold 24 gift words (Tea towels, Air fryer, Braai tongs…) instead of numbers. While the bride opens presents, tap each gift on the host panel's word grid as it comes out. Tap it again to undo a mis-tap. The TV shows "🎁 Just opened: Air fryer" with a sparkle sound and lights the word up on a board of all gifts. Guests mark their own cards exactly like number bingo. Gifts keep counting while a winner is on screen, because the unwrapping doesn't stop. Edit the word list (`GIFT_WORDS` in `src/lib/rounds.js`) to match what's likely on the gift table. Keep the words short and have at least 24.
+Pick **🎁 Gifts** before dealing. Cards hold 24 gift words (Tea towels, Air fryer, Braai tongs…) instead of numbers. While the bride opens presents, tap each gift on the host panel's word grid as it comes out. Tap it again to undo a mis-tap. The TV shows "🎁 Just opened: Air fryer" with a sparkle sound and lights the word up on a board of all gifts. Guests mark their own cards exactly like number bingo. Gifts keep counting while a winner is on screen, because the unwrapping doesn't stop. The list is 30 of the most common kitchen tea gifts (`GIFT_WORDS` in `src/lib/rounds.js`). With 15 players and every opened gift on the list, the first line comes after about 10 gifts, but a full house needs about 29. So play **One line** (or Two lines / Four corners), not Full house. Edit the list to match the gift registry if you have one. Keep the words short and have at least 24.
 
 ## Sound effects
 
