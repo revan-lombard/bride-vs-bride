@@ -10,28 +10,148 @@ import { THEME } from './theme'
  * rounds (or boards you copy out of the survey results as a backup).
  */
 
+/**
+ * Family Feud boards — kitchen-tea / wedding themed. Each has 5 answers
+ * (highest first, like the real board) and 2 decoys: plausible wrong
+ * answers mixed into the phone options so strikes and steals happen.
+ *
+ * ⚠️ The point values are our ESTIMATES of how 50 people would answer, not
+ * survey data — scaled so a full board (~50) outweighs the 10-point games
+ * without drowning them out. For real numbers, run the pre-event survey and tap "Use as
+ * Feud round" on /#/survey-results — or edit the points here.
+ */
 export const FEUD_ROUNDS = [
   {
     question: 'Name something the brides will fight over in the honeymoon suite',
     answers: [
-      { text: 'The bathroom mirror', points: 8 },
-      { text: 'Suitcase space', points: 5 },
-      { text: 'The aircon remote', points: 4 },
-      { text: 'Who books the activities', points: 2 },
+      { text: 'The bathroom mirror', points: 15 },
+      { text: 'The aircon remote', points: 12 },
+      { text: 'Suitcase space', points: 9 },
+      { text: 'Which side of the bed', points: 8 },
+      { text: 'Who books the activities', points: 4 },
     ],
-    // Wrong answers mixed into the phone options — without these every
-    // pick is on the board and nobody can ever get a strike.
-    decoys: ['The minibar', 'Which side of the bed', 'The wedding photos'],
+    decoys: ['The minibar', 'The wedding photos'],
   },
   {
-    question: 'Name something guests will sneak home from the wedding',
+    question: 'Name something guests sneak home from a wedding',
     answers: [
-      { text: 'Table decor', points: 9 },
-      { text: 'Leftover cake', points: 6 },
-      { text: 'The flower arrangements', points: 3 },
-      { text: 'An extra bottle of wine', points: 2 },
+      { text: 'Table decor', points: 16 },
+      { text: 'Leftover cake', points: 12 },
+      { text: 'The flowers', points: 9 },
+      { text: 'A bottle of wine', points: 6 },
+      { text: 'Their name card', points: 3 },
     ],
-    decoys: ['The guest book', 'A chair cover', 'The DJ'],
+    decoys: ['The guest book', 'A chair cover'],
+  },
+  {
+    question: 'Name something every kitchen tea gift table has',
+    answers: [
+      { text: 'Tea towels', points: 16 },
+      { text: 'Wine glasses', points: 11 },
+      { text: 'Tupperware', points: 9 },
+      { text: 'A kettle', points: 6 },
+      { text: 'Wooden spoons', points: 4 },
+    ],
+    decoys: ['A toolbox', 'A fishing rod'],
+  },
+  {
+    question: 'Name something a bride does the night before her wedding',
+    answers: [
+      { text: 'Can\'t sleep', points: 15 },
+      { text: 'Face mask / skincare', points: 11 },
+      { text: 'Cries', points: 8 },
+      { text: 'Checks the to-do list again', points: 7 },
+      { text: 'Has a glass of wine', points: 5 },
+    ],
+    decoys: ['Goes for a run', 'Watches rugby'],
+  },
+  {
+    question: 'Name something that can go wrong at a wedding',
+    answers: [
+      { text: 'Rain', points: 15 },
+      { text: 'Someone arrives late', points: 11 },
+      { text: 'The music / DJ', points: 8 },
+      { text: 'A wardrobe malfunction', points: 6 },
+      { text: 'A guest has too much to drink', points: 4 },
+    ],
+    decoys: ['The flowers wilt', 'The speeches run too long'],
+  },
+  {
+    question: 'Name a popular honeymoon destination',
+    answers: [
+      { text: 'Mauritius', points: 16 },
+      { text: 'Bali', points: 10 },
+      { text: 'Zanzibar', points: 8 },
+      { text: 'Paris', points: 6 },
+      { text: 'Seychelles', points: 5 },
+    ],
+    decoys: ['Maldives', 'Cape Town'],
+  },
+  {
+    question: 'Name something in a bride\'s emergency kit',
+    answers: [
+      { text: 'Safety pins', points: 15 },
+      { text: 'Tissues', points: 11 },
+      { text: 'Plasters', points: 8 },
+      { text: 'Painkillers', points: 6 },
+      { text: 'Lipstick', points: 5 },
+    ],
+    decoys: ['Hairspray', 'Deodorant'],
+  },
+  {
+    question: 'Name a reason a wedding speech goes wrong',
+    answers: [
+      { text: 'It\'s too long', points: 17 },
+      { text: 'Embarrassing stories', points: 12 },
+      { text: 'The speaker is tipsy', points: 9 },
+      { text: 'They forget what to say', points: 6 },
+      { text: 'The mic doesn\'t work', points: 4 },
+    ],
+    decoys: ['They get the names wrong', 'They cry all the way through'],
+  },
+  {
+    question: 'Name something you need for a perfect braai',
+    answers: [
+      { text: 'Boerewors / meat', points: 17 },
+      { text: 'Charcoal or wood', points: 11 },
+      { text: 'Firelighters', points: 7 },
+      { text: 'Tongs', points: 6 },
+      { text: 'Cold drinks', points: 4 },
+    ],
+    decoys: ['Pap', 'A potato salad'],
+  },
+  {
+    question: 'Name something people do on the dance floor at a wedding',
+    answers: [
+      { text: 'Sokkie / langarm', points: 13 },
+      { text: 'A conga line', points: 11 },
+      { text: 'Dad dancing', points: 9 },
+      { text: 'Take their shoes off', points: 8 },
+      { text: 'Sing along loudly', points: 5 },
+    ],
+    decoys: ['The limbo', 'The Macarena'],
+  },
+  {
+    question: 'Name a chore newlyweds will argue about',
+    answers: [
+      { text: 'Dishes', points: 15 },
+      { text: 'Laundry', points: 12 },
+      { text: 'Taking out the rubbish', points: 9 },
+      { text: 'Cooking', points: 7 },
+      { text: 'Making the bed', points: 4 },
+    ],
+    decoys: ['Ironing', 'Walking the dog'],
+  },
+  {
+    question: 'Name something you need for the perfect date night',
+    answers: [
+      { text: 'Good food', points: 14 },
+      { text: 'Wine', points: 12 },
+      { text: 'A movie', points: 8 },
+      { text: 'Candles', points: 6 },
+      { text: 'Dessert', points: 5 },
+    ],
+    decoys: ['Flowers', 'A board game'],
   },
 ]
 

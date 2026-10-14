@@ -51,6 +51,8 @@ What's built, what's worth adding, and what would take the show to the next leve
 
 - **Noot vir Noot content** (built 2026-10-14): NOOT_ROUNDS rewritten — 14 rounds (Afrikaans/SA classics + "which ABBA/Whitney/Queen/Bruno Mars/Beyoncé/Taylor Swift song?" artist rounds) with checked titles/artists; no-audio mode where the host plays from a phone and toggles "Luister…" on the TV.
 
+- **Feud content** (built 2026-10-14): 12 kitchen-tea/wedding boards in FEUD_ROUNDS, 5 answers + 2 decoys each; point values are estimates (≈50 per board for balance with the 10-point games) — the survey's "Use as Feud round" gives real numbers.
+
 ---
 
 ## 📋 Built: pre-event Feud survey (multiple choice)
