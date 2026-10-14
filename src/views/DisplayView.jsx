@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { GAMES, GAME_TITLES, TEAMS, MAX_STRIKES } from '../lib/schema'
+import { GAMES, TEAMS, MAX_STRIKES } from '../lib/schema'
 import { THEME } from '../lib/theme'
 import { playCue, unlockAudio, isAudioUnlocked, isMuted, setMuted } from '../lib/sounds'
 import { useGameSounds } from '../hooks/useGameSounds'
@@ -11,6 +11,7 @@ import BingoDisplay from '../components/BingoDisplay'
 import NewlywedDisplay from '../components/NewlywedDisplay'
 import WinnerDisplay from '../components/WinnerDisplay'
 import { CheerDisplay } from '../components/Cheer'
+import GameTransition from '../components/RecapDisplay'
 import { useWakeLock } from '../hooks/useWakeLock'
 
 /**
@@ -69,7 +70,7 @@ export default function DisplayView({ state, connected }) {
       </main>
 
       {state.reactionsOn !== false && <ReactionLayer />}
-      <GameSplash game={state.currentGame} />
+      <GameTransition game={state.currentGame} recap={state.recap} />
       <SoundToggle audioOn={audioOn} />
       <OfflinePill connected={connected} label="TV offline" />
     </div>
@@ -196,32 +197,6 @@ function ScoreValue({ value }) {
           {pop.delta > 0 ? `+${pop.delta}` : pop.delta}
         </span>
       )}
-    </div>
-  )
-}
-
-/** Big animated title when the host switches games. */
-function GameSplash({ game }) {
-  const [splash, setSplash] = useState(null)
-  const prev = useRef(game)
-
-  useEffect(() => {
-    if (prev.current === game) return
-    prev.current = game
-    const show = setTimeout(() => setSplash({ game, id: Date.now() }), 0)
-    const hide = setTimeout(() => setSplash(null), 2200)
-    return () => {
-      clearTimeout(show)
-      clearTimeout(hide)
-    }
-  }, [game])
-
-  if (!splash || game === GAMES.LOBBY) return null
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-stage/85 backdrop-blur-sm pointer-events-none">
-      <h1 key={splash.id} className="text-9xl font-extrabold text-center animate-splash">
-        {GAME_TITLES[splash.game] || splash.game}
-      </h1>
     </div>
   )
 }

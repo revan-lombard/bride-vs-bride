@@ -136,6 +136,11 @@ export const DEFAULT_STATE = {
   // phase 'running' → clients derive countdown/live/counting from the
   // server clock; 'done' once scored. result = tallyCheer() output.
   cheerState: { phase: 'idle', roundId: '', startsAt: 0, endsAt: 0, result: null },
+  // Snapshot taken whenever the host switches game, so the next switch can
+  // say what that game was worth: { game, scores, points: { [playerId]: n } }
+  gameStart: null,
+  // Between-games recap on the TV (and a toast on phones). See buildRecap.
+  recap: null,
   // Countdown shown big on the TV. { duration, endsAt } — visual only,
   // the host still locks buzzers / closes polls themselves.
   timer: null,

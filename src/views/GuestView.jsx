@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { GAMES, TEAMS, loadPlayer, savePlayer, clearPlayer, isMe, brideTeamOf, brideName, whoSaidText } from '../lib/schema'
+import { GAMES, GAME_TITLES, TEAMS, loadPlayer, savePlayer, clearPlayer, isMe, brideTeamOf, brideName, whoSaidText } from '../lib/schema'
 import { THEME } from '../lib/theme'
 import {
   buzz as sendBuzz,
@@ -64,6 +64,7 @@ export default function GuestView({ state, connected }) {
   return (
     <div className="min-h-full flex flex-col">
       <ReconnectOverlay connected={connected} />
+      <RecapToast recap={state.recap} player={player} />
       <header className={`${teamColor} px-4 py-3 flex items-center justify-between`}>
         <div>
           <div className="font-bold">{player.userName}</div>
@@ -415,6 +416,52 @@ function VotePad({ player, pollState }) {
       {myVote && isOpen && (
         <p className="text-white/60 text-sm">You can change your vote until it closes</p>
       )}
+    </div>
+  )
+}
+
+/**
+ * Phone side of the between-games recap: a few seconds of "your team +12,
+ * you +5" while the TV shows the full version. Skips whatever recap was
+ * already in state when the page loaded.
+ */
+function RecapToast({ recap, player }) {
+  const [shown, setShown] = useState(null)
+  const seen = useRef(recap?.id)
+
+  useEffect(() => {
+    if (!recap?.id || recap.id === seen.current) return
+    seen.current = recap.id
+    const show = setTimeout(() => setShown(recap), 0)
+    const hide = setTimeout(() => setShown(null), 6500)
+    return () => {
+      clearTimeout(show)
+      clearTimeout(hide)
+    }
+  }, [recap])
+
+  if (!shown) return null
+  const { fromGame, gained, scores, gains } = shown
+  const lead = scores.teamA === scores.teamB ? null : scores.teamA > scores.teamB ? 'teamA' : 'teamB'
+  const mine = gains?.[player.id]
+  return (
+    <div className="fixed top-16 inset-x-3 z-40 rounded-2xl bg-white text-stage p-4 shadow-2xl animate-card-reveal text-center space-y-1">
+      <p className="text-xs uppercase tracking-widest text-stage/60">
+        {fromGame ? `${GAME_TITLES[fromGame] || fromGame} — recap` : '📊 Scoreboard check'}
+      </p>
+      {gained && (
+        <p className="text-xl font-extrabold">
+          {gained[player.team] > 0 ? `Your team +${gained[player.team]}` : 'No points for your team this round'}
+          {mine > 0 && <span className="text-bride-a-dark"> · you +{mine} ⭐</span>}
+        </p>
+      )}
+      <p className="font-bold">
+        {lead
+          ? lead === player.team
+            ? `👑 You're leading by ${Math.abs(scores.teamA - scores.teamB)}!`
+            : `😤 ${TEAMS[lead].label} leads by ${Math.abs(scores.teamA - scores.teamB)} — catch up!`
+          : `🤝 All square at ${scores.teamA}!`}
+      </p>
     </div>
   )
 }

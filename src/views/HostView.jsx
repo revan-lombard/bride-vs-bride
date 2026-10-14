@@ -4,7 +4,8 @@ import { GAMES, TEAMS, MAX_STRIKES, BUZZER_GAMES, brideName, brideTeamOf } from 
 import { THEME } from '../lib/theme'
 import { FEUD_ROUNDS, POLL_PRESETS, LYRIC_ROUNDS, NOOT_ROUNDS, NEWLYWED_ROUNDS } from '../lib/rounds'
 import {
-  setCurrentGame,
+  switchGame,
+  showRecap,
   adjustScore,
   unlockBuzzers,
   lockBuzzers,
@@ -75,7 +76,7 @@ export default function HostView({ state, connected }) {
           {Object.values(GAMES).map((g) => (
             <button
               key={g}
-              onClick={() => setCurrentGame(g)}
+              onClick={() => switchGame(g, state)}
               className={`rounded-lg py-3 text-xs font-bold ${
                 state.currentGame === g ? 'bg-white text-stage' : 'bg-white/15'
               }`}
@@ -87,6 +88,12 @@ export default function HostView({ state, connected }) {
       </Section>
 
       <Section title="Scores">
+        <button
+          onClick={() => showRecap(state)}
+          className="w-full rounded-lg bg-white/10 py-2 text-xs font-bold"
+        >
+          📊 Show scoreboard check on the TV
+        </button>
         <div className="grid grid-cols-2 gap-3">
           {Object.values(TEAMS).map((t) => (
             <div

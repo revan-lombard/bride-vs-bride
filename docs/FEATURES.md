@@ -38,6 +38,8 @@ What's built, what's worth adding, and what would take the show to the next leve
 
 - **Cheer-off** (built 2026-10-14): 10s tapping tug-of-war. Server-clock-synced countdown/live/counting phases, taps batched 4×/s per phone into `/reactions/{root}-cheer/{round}` (no new rules), 15 taps/s cap, average-per-tapper scoring, transaction-guarded auto-finish from host or TV, +10 winner / +5 personal for top tapper.
 
+- **Round recaps** (built 2026-10-14, roadmap #17 extended): host game switches go through `switchGame`, which snapshots scores/personal points (`gameStart`) and, when the game being left changed the score, writes a `recap` (team gains, totals, star of the round, MVP so far, next game). TV `GameTransition` plays recap → title splash; phones get a toast; manual "scoreboard check" from the host.
+
 ---
 
 ## 📋 Built: pre-event Feud survey (multiple choice)

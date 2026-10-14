@@ -10,7 +10,7 @@ import {
 } from 'firebase/database'
 import { db } from './firebase'
 import { GAME_ROOT } from './mode'
-import { DEFAULT_STATE } from './schema'
+import { DEFAULT_STATE, GAMES } from './schema'
 import { nextBall, PATTERNS } from './bingo'
 import { serverNow } from './serverTime'
 import { CHEER_SECONDS, CHEER_POINTS, CHEER_TOP_POINTS, COUNTDOWN_MS, tallyCheer } from './cheer'
@@ -31,7 +31,70 @@ const credit = (updates, playerId, points) => {
 
 export const resetGame = () => set(game(), DEFAULT_STATE)
 
-export const setCurrentGame = (name) => set(game('currentGame'), name)
+const personalPoints = (players) =>
+  Object.fromEntries(
+    Object.entries(players || {})
+      .filter(([, p]) => p?.userName && !p.kicked)
+      .map(([id, p]) => [id, p.points || 0])
+  )
+
+/**
+ * What a round was worth: team gains since `start` (null = no round, just a
+ * standings check), the star of the round (biggest personal gain), and the
+ * MVP so far. Everything the TV and phones need, so they don't recompute.
+ */
+function buildRecap(state, start, fromGame, toGame) {
+  const scores = { teamA: state.scores?.teamA ?? 0, teamB: state.scores?.teamB ?? 0 }
+  const now = personalPoints(state.players)
+  const people = state.players || {}
+  const gains = {}
+  if (start) {
+    for (const [id, pts] of Object.entries(now)) {
+      const g = pts - (start.points?.[id] || 0)
+      if (g > 0) gains[id] = g
+    }
+  }
+  const pick = (map) => {
+    const [id, n] = Object.entries(map).sort((a, b) => b[1] - a[1])[0] || []
+    return id && n > 0 ? { playerId: id, userName: people[id]?.userName, team: people[id]?.team, points: n } : null
+  }
+  return {
+    id: Math.random().toString(36).slice(2, 10),
+    fromGame: fromGame || null,
+    toGame,
+    gained: start
+      ? { teamA: scores.teamA - (start.scores?.teamA ?? 0), teamB: scores.teamB - (start.scores?.teamB ?? 0) }
+      : null,
+    scores,
+    gains,
+    star: pick(gains),
+    mvp: pick(now),
+  }
+}
+
+/**
+ * Switch games from the host panel. Leaving a game where points changed
+ * puts a recap on the TV first (not before the WINNER screen — that has its
+ * own reveal). Also snapshots scores so the next switch can recap this one.
+ */
+export function switchGame(name, state) {
+  if (name === state.currentGame) return
+  const from = state.currentGame
+  const start = state.gameStart
+  const updates = {
+    currentGame: name,
+    gameStart: { game: name, scores: state.scores || {}, points: personalPoints(state.players) },
+  }
+  const quiet = [GAMES.LOBBY, GAMES.WINNER]
+  if (start?.game === from && !quiet.includes(from) && name !== GAMES.WINNER) {
+    const recap = buildRecap(state, start, from, name)
+    if (recap.gained.teamA || recap.gained.teamB) updates.recap = recap
+  }
+  return update(game(), updates)
+}
+
+/** "📊 Scoreboard check" on demand: standings + MVP, no round gains. */
+export const showRecap = (state) => set(game('recap'), buildRecap(state, null, null, state.currentGame))
 
 export const adjustScore = (team, delta) =>
   runTransaction(game(`scores/${team}`), (current) => (current || 0) + delta)

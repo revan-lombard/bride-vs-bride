@@ -97,6 +97,16 @@ Add `?rehearsal=1` to any game URL (e.g. `#/host?rehearsal=1`, `#/display?rehear
 4. **🗨️ Who said it?:** a quote (or "Who is more likely to…?"). Everyone votes Melissa or Calista. If the bank entry has no answer, the host taps "It was Melissa / Calista" to reveal.
 5. **✨ Reveal & score:** each team earns up to 10 points scaled by the *share* of its guessers who got it right (fair with uneven teams). Each correct guesser earns 5 personal points.
 
+## 📊 Round recaps
+
+When you switch away from a game where points changed, the TV shows a recap for about 7 seconds before the next game's title:
+- what each team won that round, plus the totals
+- who's leading, and by how much
+- ⭐ the star of the round (biggest personal gain) and 🌟 the MVP so far
+- "Up next: …"
+
+Phones get a quick toast at the same time ("Your team +12 · you +5 ⭐ — you're leading by 3!"). Switching away from a round where nobody scored skips the recap, and so does switching to the 🏆 Winner screen, which has its own reveal. Want the standings mid-game? Tap **📊 Show scoreboard check on the TV** under Scores on the host panel.
+
 ## 🪢 Cheer-off (tug-of-war)
 
 Switch to **Cheer-off** and tap **Start**. The TV and phones count down 3-2-1, then for **10 seconds** every phone is one giant button in its team colour. Everyone taps as fast as they can and a 💍 on a rope swings towards the team that's pulling harder. The winner gets **10 points** (a tie splits them), and the top tapper gets 5 MVP points and a shout-out on the TV.
