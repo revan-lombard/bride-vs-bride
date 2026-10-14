@@ -53,6 +53,8 @@ What's built, what's worth adding, and what would take the show to the next leve
 
 - **Feud content** (built 2026-10-14): 12 kitchen-tea/wedding boards in FEUD_ROUNDS, 5 answers + 2 decoys each; point values are estimates (≈50 per board for balance with the 10-point games) — the survey's "Use as Feud round" gives real numbers.
 
+- **Bride Knows Best content** (built 2026-10-14): 20 rounds — 10 secret bride answers, 10 "who is more likely / who said" rounds with no invented answers (the host asks the brides at the reveal and taps the name); headers read "Melissa or Calista?".
+
 ---
 
 ## 📋 Built: pre-event Feud survey (multiple choice)

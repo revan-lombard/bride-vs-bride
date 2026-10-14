@@ -356,12 +356,14 @@ export const GIFT_WORDS = [
  *
  *  kind 'bride':   both brides answer secretly on their phones (or the host
  *                  enters it); each team predicts what THEIR bride picked.
- *  kind 'whosaid': a quote or "who is more likely to…" with a known answer
- *                  ('A' = brideA, 'B' = brideB); everyone votes.
+ *  kind 'whosaid': "Who is more likely to…?" / "Who said…?" — everyone votes
+ *                  Melissa or Calista. Add answer: 'A' (brideA) or 'B'
+ *                  (brideB) if you already know it; leave it out and the host
+ *                  asks the brides at the reveal and taps the name they give.
  *
  * Teams score up to `points` by the share of their guessers who got it
  * right (fair with uneven teams); each correct guesser earns MVP points.
- * Placeholders — swap in the real questions and quotes.
+ * The run sheet loads #0, #1 and #5 — the rest are one tap away in the bank.
  */
 export const NEWLYWED_ROUNDS = [
   {
@@ -385,15 +387,45 @@ export const NEWLYWED_ROUNDS = [
     options: ['Smile', 'Eyes', 'Shoes', 'Sense of humour'],
   },
   {
-    kind: 'whosaid',
-    question: 'PASTE: a quote one of the brides actually said',
-    answer: 'A',
+    kind: 'bride',
+    question: 'Favourite way to spend a Sunday',
+    options: ['Sleeping in', 'Brunch out', 'A braai with friends', 'Couch + series', 'An outdoor adventure'],
+  },
+  { kind: 'whosaid', question: 'Who is more likely to cry at the vows?' },
+  { kind: 'whosaid', question: 'Who is more likely to get lost on the honeymoon?' },
+  { kind: 'whosaid', question: 'Who plans every detail of a holiday?' },
+  { kind: 'whosaid', question: 'Who is more likely to fall asleep during a movie?' },
+  { kind: 'whosaid', question: 'Who is more likely to burn dinner?' },
+  {
+    kind: 'bride',
+    question: 'Biggest pet peeve',
+    options: ['Loud chewing', 'Being late', 'Dishes in the sink', 'Bad drivers', 'Phones at the table'],
   },
   {
-    kind: 'whosaid',
-    question: 'Who is more likely to cry at the vows?',
-    answer: 'B',
+    kind: 'bride',
+    question: 'Go-to comfort food',
+    options: ['Pizza', 'Pasta', 'Chocolate', 'Slap chips', 'Koeksisters'],
   },
+  {
+    kind: 'bride',
+    question: 'Ideal anniversary gift',
+    options: ['Jewellery', 'A weekend away', 'A handwritten letter', 'A surprise experience', 'Flowers'],
+  },
+  {
+    kind: 'bride',
+    question: 'Superpower she would pick',
+    options: ['Teleportation', 'Reading minds', 'Flying', 'Invisibility', 'Time travel'],
+  },
+  {
+    kind: 'bride',
+    question: 'Where you will find her at a party',
+    options: ['On the dance floor', 'At the snack table', 'Chatting in the kitchen', 'Taking photos', 'Leaving early'],
+  },
+  { kind: 'whosaid', question: 'Who said "I love you" first?' },
+  { kind: 'whosaid', question: 'Who takes longer to get ready?' },
+  { kind: 'whosaid', question: 'Who is more likely to adopt a pet without asking?' },
+  { kind: 'whosaid', question: 'Who is the better cook?' },
+  { kind: 'whosaid', question: 'Who is more likely to start a dance-off at the wedding?' },
 ]
 
 /**
@@ -420,7 +452,7 @@ export const RUN_SHEET = [
   { game: 'BINGO', bingo: { mode: 'gifts', pattern: 'line' }, note: 'Gift Bingo while the presents are opened — tap each gift on the grid.' },
   { game: 'FEUD', feud: 1, note: 'Second Feud board. Arm buzzers after reading the question.' },
   { game: 'NEWLYWED', newlywed: 1, note: 'Another secret bride answer.' },
-  { game: 'NEWLYWED', newlywed: 5, note: 'Who said it? — everyone votes, then Reveal.' },
+  { game: 'NEWLYWED', newlywed: 5, note: 'Who is more likely…? Everyone votes, then ask the brides “well, who is it?” and tap the name they give.' },
   { game: 'LYRIC', lyric: 0, note: 'Emoji Song Quiz: arm buzzers — the winner shouts the title. ✅ +5 / +10, then ✨ Reveal. Load the next song from the Lyric bank (13 more).' },
   { game: 'NOOT', noot: 0, note: 'Play ~10s of the song on your phone/speaker, tap 🎧 Playing from my phone, arm buzzers — the winner picks the title. 13 more songs in the Noot bank.' },
   { game: 'CHEER', note: 'Final showdown! Last chance to catch up.' },

@@ -116,7 +116,7 @@ Add `?rehearsal=1` to any game URL (e.g. `#/host?rehearsal=1`, `#/display?rehear
 1. **Mark the brides:** on the host panel open 👥 players and tap 👰 on Melissa's phone (once = Melissa, twice = Calista, three times = back to a normal guest).
 2. Switch to **NEWLYWED** and tap a round from the bank (`NEWLYWED_ROUNDS` in `src/lib/rounds.js`, or ✍️ Manual entry).
 3. **💑 Bride rounds:** each bride's phone shows a 🤫 secret-answer pad. Everyone else sees "What did *your* bride pick?" and guesses. The TV shows 🔒 as each bride locks in. If a bride has no phone, the host can enter her answer ("Enter her answer for her").
-4. **🗨️ Who said it?:** a quote (or "Who is more likely to…?"). Everyone votes Melissa or Calista. If the bank entry has no answer, the host taps "It was Melissa / Calista" to reveal.
+4. **🗨️ Melissa or Calista?:** "Who is more likely to…?" or "Who said…?". Everyone votes. The bank entries have no stored answer, so at the reveal ask the brides "well, who is it?" and tap **👰 Melissa! / 👰 Calista!** (add `answer: 'A'` or `'B'` to an entry if you already know it).
 5. **✨ Reveal & score:** each team earns up to 10 points scaled by the *share* of its guessers who got it right (fair with uneven teams). Each correct guesser earns 5 personal points.
 
 ## 📋 Run sheet (the host's ▶ Next button)

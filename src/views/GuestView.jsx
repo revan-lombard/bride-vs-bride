@@ -800,7 +800,7 @@ function NewlywedPad({ player, role, nw }) {
   return (
     <div className="w-full max-w-sm space-y-4">
       <p className="text-center text-sm text-white/60">
-        {whosaid ? '🗨️ Who said it?' : `💑 What did ${brideName(player.team)} pick?`}
+        {whosaid ? `🗨️ ${brideName('teamA')} or ${brideName('teamB')}?` : `💑 What did ${brideName(player.team)} pick?`}
       </p>
       <h2 className="text-2xl font-bold text-center">{whosaid ? whoSaidText(question) : question}</h2>
       <div className={whosaid ? 'grid grid-cols-2 gap-3' : 'space-y-2'}>

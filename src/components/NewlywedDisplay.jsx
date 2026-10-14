@@ -24,7 +24,7 @@ export default function NewlywedDisplay({ nw }) {
     const total = guessList.length || 1
     return (
       <div className="w-full max-w-5xl text-center space-y-10">
-        <h2 className="text-3xl font-bold text-white/60">🗨️ Who said it?</h2>
+        <h2 className="text-3xl font-bold text-white/60">🗨️ {brideName('teamA')} or {brideName('teamB')}?</h2>
         <p className="text-6xl font-extrabold leading-tight">{whoSaidText(question)}</p>
         {revealed ? (
           <div className="space-y-6 animate-card-reveal">

@@ -1225,6 +1225,8 @@ function NewlywedControls({ nw, players }) {
               ))}
             </div>
           ) : whosaid && !known ? (
+            <div className="space-y-1">
+            <p className="text-xs text-yellow-200">💡 Ask the brides “well, who is it?” — then tap the name they give.</p>
             <div className="flex gap-2">
               {['teamA', 'teamB'].map((t) => (
                 <button
@@ -1232,9 +1234,10 @@ function NewlywedControls({ nw, players }) {
                   onClick={() => revealNewlywed(nw, t)}
                   className={`flex-1 rounded-lg py-3 font-bold ${t === 'teamA' ? 'bg-bride-a-dark' : 'bg-bride-b-dark'}`}
                 >
-                  ✨ It was {brideName(t)}
+                  👰 {brideName(t)}!
                 </button>
               ))}
+            </div>
             </div>
           ) : (
             <button
