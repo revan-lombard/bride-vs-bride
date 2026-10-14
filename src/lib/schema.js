@@ -72,6 +72,10 @@ export const DEFAULT_STATE = {
     strikes: 0,
     // Last phone-submitted guess: { userName, team, choice, correct }
     lastGuess: null,
+    // After the 3rd strike the other team gets one guess to steal the board:
+    // { team, status: 'open'|'won'|'lost', by?, points? }. Answers revealed
+    // by a phone pick carry `by: team` so a steal knows what to take.
+    steal: null,
   },
   lyricState: {
     // snippet shows on the TV; answer stays hidden until the host reveals it

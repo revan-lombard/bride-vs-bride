@@ -153,6 +153,7 @@ Phones have a row of emojis along the bottom (😂 ❤️ 🎉 👏 😱 🔥 �
 3. Guests scan the QR code shown in the LOBBY screen (or from the host panel).
 4. Switch games from the host panel — every phone follows automatically.
 5. **Feud rounds:** load a round (survey results page, content bank, or paste `Question` + `answer | points` lines), then arm the buzzers. Guests see the question + options on their phones; the buzz winner picks on their phone and the board auto-reveals a hit (or auto-strikes a miss) with the sound cue. Re-arm for the next guess; award the revealed total with the 🏆 buttons. Manual tap-to-reveal and ✕ buttons still work as an override.
+   - **Steal:** the 3rd strike hands the board to the *other* team: the TV shows "🦹 STEAL!" with the points at stake, and after you arm the buzzers only their phones can buzz, for **one** guess. A hit takes the round: the defenders' points from this board move over, plus the new answer's points. A miss means the defenders keep everything. Afterwards, **✨ Reveal the rest of the board** shows the remaining answers without scoring them. (Added strikes by hand with the ✕ buttons? Use **🦹 Start steal** on the host panel.)
 6. **Polls:** type a question + options, open, then "Show results" for the big reveal.
 7. **Buzzer rounds (Feud face-offs / Lyric):** tap "Arm buzzers" — first phone to tap takes over the TV. Award points, re-arm, repeat.
 8. If anything goes weird: "Reset everything" puts the state back to defaults (scores included — edit scores back manually if needed).

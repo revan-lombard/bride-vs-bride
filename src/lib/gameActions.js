@@ -10,7 +10,7 @@ import {
 } from 'firebase/database'
 import { db } from './firebase'
 import { GAME_ROOT } from './mode'
-import { DEFAULT_STATE, GAMES } from './schema'
+import { DEFAULT_STATE, GAMES, MAX_STRIKES } from './schema'
 import { nextBall, PATTERNS } from './bingo'
 import { serverNow } from './serverTime'
 import { CHEER_SECONDS, CHEER_POINTS, CHEER_TOP_POINTS, COUNTDOWN_MS, tallyCheer } from './cheer'
@@ -263,9 +263,8 @@ export const castVote = (player, choice) =>
  * re-arms; a revealed answer picked again counts as a miss, Feud style.
  */
 export function submitFeudGuess(player, choice, feudState) {
-  const idx = (feudState.answers || []).findIndex(
-    (a) => a.text === choice && !a.revealed
-  )
+  const answers = feudState.answers || []
+  const idx = answers.findIndex((a) => a.text === choice && !a.revealed)
   const correct = idx >= 0
   const updates = {
     'feudState/lastGuess': {
@@ -276,17 +275,77 @@ export function submitFeudGuess(player, choice, feudState) {
     },
     buzzerState: { isUnlocked: false, firstBuzzed: null },
   }
+
+  if (feudState.steal?.status === 'open') {
+    if (player.team !== feudState.steal.team) return // only the stealers get this guess
+    return update(game(), { ...updates, ...resolveSteal(player, idx, feudState) })
+  }
+
   if (correct) {
+    const points = answers[idx].points || 0
     updates[`feudState/answers/${idx}/revealed`] = true
-    updates[`scores/${player.team}`] = increment(
-      feudState.answers[idx].points || 0
-    )
-    credit(updates, player.id, feudState.answers[idx].points || 0)
+    updates[`feudState/answers/${idx}/by`] = player.team
+    updates[`scores/${player.team}`] = increment(points)
+    credit(updates, player.id, points)
   } else {
-    updates['feudState/strikes'] = Math.min((feudState.strikes || 0) + 1, 3)
+    const strikes = Math.min((feudState.strikes || 0) + 1, MAX_STRIKES)
+    updates['feudState/strikes'] = strikes
+    // Third strike with answers still hidden: the other team may steal.
+    if (strikes === MAX_STRIKES && answers.some((a) => !a.revealed)) {
+      updates['feudState/steal'] = { team: otherTeam(player.team), status: 'open' }
+    }
   }
   return update(game(), updates)
 }
+
+const otherTeam = (team) => (team === 'teamA' ? 'teamB' : 'teamA')
+
+/** What a successful steal is worth: the defenders' points on this board. */
+export const stealPot = (feudState, stealTeam) =>
+  (feudState?.answers || [])
+    .filter((a) => a.revealed && a.by === otherTeam(stealTeam))
+    .reduce((s, a) => s + (a.points || 0), 0)
+
+/**
+ * The steal: one guess. A hit takes the round — the defending team's points
+ * from this board move to the stealers, plus the answer they found. A miss
+ * and the defenders keep everything.
+ */
+function resolveSteal(player, idx, feudState) {
+  const team = feudState.steal.team
+  const defenders = otherTeam(team)
+  const updates = {}
+  if (idx < 0) {
+    updates['feudState/steal'] = { team, status: 'lost', by: player.userName }
+    return updates
+  }
+  const moved = stealPot(feudState, team)
+  const answerPoints = feudState.answers[idx].points || 0
+  const total = moved + answerPoints
+  updates[`feudState/answers/${idx}/revealed`] = true
+  updates[`feudState/answers/${idx}/by`] = team
+  // Re-label the defenders' answers as stolen so a second look doesn't double-count.
+  feudState.answers.forEach((a, i) => {
+    if (a.revealed && a.by === defenders) updates[`feudState/answers/${i}/by`] = team
+  })
+  updates[`scores/${team}`] = increment(total)
+  if (moved) updates[`scores/${defenders}`] = increment(-moved)
+  credit(updates, player.id, total)
+  updates['feudState/steal'] = { team, status: 'won', by: player.userName, points: total }
+  return updates
+}
+
+/** Host: open a steal by hand (e.g. strikes were added with the ✕ buttons). */
+export const startSteal = (team) => set(game('feudState/steal'), { team, status: 'open' })
+
+/** Host: show the rest of the board once the round is decided (no points). */
+export const revealAllFeud = (feudState) =>
+  update(
+    game(),
+    Object.fromEntries(
+      (feudState.answers || []).map((a, i) => [`feudState/answers/${i}/revealed`, true])
+    )
+  )
 
 /* ------------------------------------------------------------------ */
 /* Noot vir Noot                                                       */

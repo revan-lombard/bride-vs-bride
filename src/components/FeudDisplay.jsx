@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { MAX_STRIKES, TEAMS } from '../lib/schema'
+import { stealPot } from '../lib/gameActions'
 
 /**
  * Family Feud on the TV, game-show style: a gold-framed blue board with
@@ -7,7 +8,7 @@ import { MAX_STRIKES, TEAMS } from '../lib/schema'
  * strike tally — and the giant red ✕ across the whole screen on a miss.
  */
 export default function FeudDisplay({ feudState }) {
-  const { question, answers = [], strikes = 0, lastGuess, options = [] } = feudState || {}
+  const { question, answers = [], strikes = 0, lastGuess, options = [], steal } = feudState || {}
   const total = answers.filter((a) => a.revealed).reduce((s, a) => s + (a.points || 0), 0)
   const bigStrike = useBigStrike(strikes, question)
   // Two columns, filled down then across like the real board.
@@ -25,6 +26,8 @@ export default function FeudDisplay({ feudState }) {
 
   return (
     <div className="w-full max-w-7xl flex flex-col items-center gap-6">
+      {steal && <StealBanner steal={steal} pot={stealPot(feudState, steal.team)} />}
+
       <div className="w-full rounded-2xl bg-gradient-to-b from-blue-600 to-blue-800 border-4 border-yellow-400 px-10 py-5 text-center shadow-2xl">
         <h2 className="text-5xl font-extrabold leading-tight">{question}</h2>
       </div>
@@ -103,6 +106,33 @@ export default function FeudDisplay({ feudState }) {
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+function StealBanner({ steal, pot }) {
+  const thief = TEAMS[steal.team]
+  const defenders = TEAMS[steal.team === 'teamA' ? 'teamB' : 'teamA']
+  const thiefBg = steal.team === 'teamA' ? 'bg-bride-a-dark' : 'bg-bride-b-dark'
+  if (steal.status === 'open') {
+    return (
+      <div className={`w-full rounded-2xl ${thiefBg} border-4 border-yellow-300 px-8 py-4 text-center animate-text-pulse`}>
+        <span className="text-5xl font-extrabold">🦹 STEAL! </span>
+        <span className="text-3xl font-bold">
+          {thief.label} — one guess to take {pot > 0 ? `${pot} points` : 'the board'}!
+        </span>
+      </div>
+    )
+  }
+  return steal.status === 'won' ? (
+    <div className={`w-full rounded-2xl ${thiefBg} border-4 border-yellow-300 px-8 py-4 text-center animate-card-reveal`}>
+      <span className="text-5xl font-extrabold">
+        🦹 {thief.label} STOLE {steal.points} points!
+      </span>
+    </div>
+  ) : (
+    <div className="w-full rounded-2xl bg-blue-900 border-4 border-yellow-300 px-8 py-4 text-center animate-card-reveal">
+      <span className="text-5xl font-extrabold">🛡️ {defenders.label} keeps the board!</span>
     </div>
   )
 }

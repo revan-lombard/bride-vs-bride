@@ -44,6 +44,8 @@ What's built, what's worth adding, and what would take the show to the next leve
 
 - **Bigger TV layouts** (built 2026-10-14, roadmap #16): Feud as a gold-framed game-show board (numbered tiles flip to answer + points, round total, last pick, strike boxes, full-screen giant ✕ on a miss). Polls: big option tiles + "votes in" meter vs players online + voter names while open (no results until reveal); reveal races bars out sorted with 👑 winner and voter names; two-option polls become a head-to-head tug-of-war bar.
 
+- **Feud steal** (built 2026-10-14): 3rd strike (with answers left) opens `feudState.steal` for the other team; only their phones can buzz; one guess. Hit = defenders' points on this board (answers carry `by: team`) move to the stealers + the answer's points (personal credit to the stealer); miss = defenders keep all. TV banner + drumroll/fanfare/strike cues, phone banners per side, host manual start + "reveal the rest" (unscored).
+
 ---
 
 ## 📋 Built: pre-event Feud survey (multiple choice)

@@ -18,6 +18,9 @@ import {
   loadFeudRound,
   revealFeudAnswer,
   setStrikes,
+  startSteal,
+  revealAllFeud,
+  stealPot,
   loadLyric,
   showLyricAnswer,
   triggerLyricPlayback,
@@ -513,7 +516,48 @@ function FeudControls({ feudState }) {
               </button>
             ))}
           </div>
+          <FeudStealControls feudState={feudState} />
         </div>
+      )}
+    </div>
+  )
+}
+
+/** Steal status for the host, plus manual start and end-of-round reveal. */
+function FeudStealControls({ feudState }) {
+  const { steal, strikes = 0, answers = [] } = feudState
+  const hidden = answers.some((a) => !a.revealed)
+  return (
+    <div className="space-y-2 pt-1">
+      {steal?.status === 'open' && (
+        <div className="rounded-lg bg-yellow-300 text-stage p-2 text-sm font-bold text-center">
+          🦹 {TEAMS[steal.team].label} is stealing ({stealPot(feudState, steal.team)} pts at stake + the answer).
+          Arm buzzers — only their phones can buzz, one guess.
+        </div>
+      )}
+      {steal?.status === 'won' && (
+        <div className="rounded-lg bg-green-800 p-2 text-sm text-center">
+          🦹 {steal.by} stole it — {TEAMS[steal.team].label} +{steal.points} (moved automatically)
+        </div>
+      )}
+      {steal?.status === 'lost' && (
+        <div className="rounded-lg bg-red-900/70 p-2 text-sm text-center">
+          🛡️ Steal missed by {steal.by} — {TEAMS[steal.team === 'teamA' ? 'teamB' : 'teamA'].label} keeps the board
+        </div>
+      )}
+      {!steal && strikes >= MAX_STRIKES && hidden && (
+        <div className="flex gap-2">
+          {['teamA', 'teamB'].map((t) => (
+            <button key={t} onClick={() => startSteal(t)} className="flex-1 rounded-lg bg-white/15 py-2 text-xs font-bold">
+              🦹 Start steal: {TEAMS[t].label}
+            </button>
+          ))}
+        </div>
+      )}
+      {(steal?.status === 'won' || steal?.status === 'lost') && hidden && (
+        <button onClick={() => revealAllFeud(feudState)} className="w-full rounded-lg bg-white/15 py-2 text-sm font-bold">
+          ✨ Reveal the rest of the board (no points)
+        </button>
       )}
     </div>
   )

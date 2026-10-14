@@ -258,6 +258,11 @@ function FeudPad({ player, feudState, buzzerState }) {
   const { isUnlocked, firstBuzzed } = buzzerState || {}
   const iWon = isMe(firstBuzzed, player)
   const revealed = new Set(answers.filter((a) => a.revealed).map((a) => a.text))
+  const steal = feudState?.steal
+  const stealOpen = steal?.status === 'open'
+  const myTeamSteals = stealOpen && steal.team === player.team
+  // During a steal only the stealing team can buzz; once decided, nobody.
+  const canBuzz = !steal || myTeamSteals
 
   // No round with options loaded yet — plain buzzer, like the lyric game.
   if (!question || !options.length) {
@@ -266,6 +271,7 @@ function FeudPad({ player, feudState, buzzerState }) {
 
   return (
     <div className="w-full max-w-sm space-y-4">
+      {steal && <StealBanner steal={steal} player={player} />}
       <h2 className="text-xl font-bold text-center">{question}</h2>
 
       <div className="space-y-2">
@@ -299,6 +305,10 @@ function FeudPad({ player, feudState, buzzerState }) {
         <p className="text-center text-white/60">
           🔒 {firstBuzzed.userName} is answering…
         </p>
+      ) : !canBuzz ? (
+        <p className="text-center text-white/60">
+          {stealOpen ? 'Fingers crossed… 🤞' : 'Board decided — next round coming up!'}
+        </p>
       ) : (
         <button
           onClick={() => isUnlocked && buzz(player)}
@@ -312,6 +322,35 @@ function FeudPad({ player, feudState, buzzerState }) {
           {isUnlocked ? 'BUZZ!' : 'Buzzers locked'}
         </button>
       )}
+    </div>
+  )
+}
+
+/** Feud steal status on the phone — framed for whichever side you're on. */
+function StealBanner({ steal, player }) {
+  const mine = steal.team === player.team
+  const thief = TEAMS[steal.team].label
+  const defenders = TEAMS[steal.team === 'teamA' ? 'teamB' : 'teamA'].label
+  const text =
+    steal.status === 'open'
+      ? mine
+        ? '🦹 STEAL! Your team gets ONE guess — talk it over, then buzz!'
+        : `🛡️ ${thief} is trying to steal your points…`
+      : steal.status === 'won'
+        ? mine
+          ? `🦹 You stole ${steal.points} points! 🎉`
+          : `😱 ${thief} stole ${steal.points} points!`
+        : mine
+          ? `😅 Steal missed — ${defenders} keeps the board`
+          : '🛡️ Steal blocked — you keep your points!'
+  const good = (steal.status === 'open' && mine) || (steal.status === 'won' && mine) || (steal.status === 'lost' && !mine)
+  return (
+    <div
+      className={`rounded-xl px-4 py-3 text-center font-extrabold ${
+        good ? 'bg-yellow-300 text-stage' : 'bg-red-900/70'
+      } ${steal.status === 'open' ? 'animate-text-pulse' : 'animate-card-reveal'}`}
+    >
+      {text}
     </div>
   )
 }

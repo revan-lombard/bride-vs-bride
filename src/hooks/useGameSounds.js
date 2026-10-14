@@ -21,7 +21,13 @@ export function useGameSounds(state) {
     if (n.game !== p.game) playCue(n.game === 'WINNER' ? 'winner' : 'whoosh')
     if (n.buzzed && !p.buzzed) playCue('buzz')
 
-    // Feud: a newly revealed card dings, a new strike buzzes
+    // Feud: a newly revealed card dings, a new strike buzzes; a steal gets
+    // a drumroll, then fanfare (stolen) or the strike buzzer (blocked)
+    if (n.feudQ === p.feudQ && n.steal !== p.steal) {
+      if (n.steal === 'open') playCue('drumroll')
+      if (n.steal === 'won') playCue('fanfare')
+      if (n.steal === 'lost') playCue('strike')
+    }
     if (n.feudQ === p.feudQ) {
       if (n.feudRevealed > p.feudRevealed) playCue('correct')
       if (n.strikes > p.strikes) playCue('strike')
@@ -59,6 +65,7 @@ function snapshot(s) {
     feudQ: s.feudState?.question || '',
     feudRevealed: answers.filter((a) => a?.revealed).length,
     strikes: s.feudState?.strikes || 0,
+    steal: s.feudState?.steal?.status || '',
     nootCorrect: s.nootState?.correct || '',
     nootRevealed: Boolean(s.nootState?.revealed),
     nootWrong: (s.nootState?.wrongGuesses || []).length,
