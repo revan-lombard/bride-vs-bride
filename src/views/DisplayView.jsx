@@ -6,6 +6,7 @@ import { playCue, unlockAudio, isAudioUnlocked, isMuted, setMuted } from '../lib
 import { useGameSounds } from '../hooks/useGameSounds'
 import { appUrl } from '../lib/mode'
 import { OfflinePill } from '../components/ConnectionStatus'
+import { ReactionLayer } from '../components/Reactions'
 import BingoDisplay from '../components/BingoDisplay'
 import Confetti from '../components/Confetti'
 
@@ -61,6 +62,7 @@ export default function DisplayView({ state, connected }) {
         <BuzzOverlay buzzerState={state.buzzerState} compact={compactBuzz} />
       </main>
 
+      {state.reactionsOn !== false && <ReactionLayer />}
       <GameSplash game={state.currentGame} />
       <SoundToggle audioOn={audioOn} />
       <OfflinePill connected={connected} label="TV offline" />

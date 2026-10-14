@@ -29,6 +29,9 @@ What's built, what's worth adding, and what would take the show to the next leve
 - **Reconnect resilience** (built 2026-10-14, roadmap #21): phones get a blocking "Reconnecting…" overlay (Refresh offered after 12s, "Back online" toast); TV and host get an offline pill.
 - **Player roster** (built 2026-10-14, roadmap #4): guests register at `players/{id}` with onDisconnect presence; host can rename / switch team / remove, synced live to the phone; duplicate-name warning; joined names on the TV lobby. Buzzes now carry `playerId`, so two guests with the same name can't both see "You buzzed first".
 
+- **Emoji reactions** (built 2026-10-14, roadmap #25): phone emoji bar → floating emojis + names on the TV, per-team sides, 0.6s cooldown, host on/off toggle. Stored at `/reactions/{root}/{playerId}` (one slot + counter per guest) so taps don't resync `/game`.
+- **Gift Bingo** (built 2026-10-14): second bingo mode with gift-word cards (`GIFT_WORDS` in rounds.js); host taps gifts as opened (undoable), TV "just opened" + gift board, same marking/claim/scoring as number bingo.
+
 ---
 
 ## 📋 Built: pre-event Feud survey (multiple choice)

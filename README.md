@@ -75,6 +75,10 @@ The Lyric game can play the actual song: the track plays with vocals, the vocals
 
 Pattern points are in `PATTERNS` in `src/lib/bingo.js`.
 
+### Gift Bingo (the kitchen-tea classic)
+
+Pick **🎁 Gifts** before dealing. Cards hold 24 gift words (Tea towels, Air fryer, Braai tongs…) instead of numbers. While the bride opens presents, tap each gift on the host panel's word grid as it comes out. Tap it again to undo a mis-tap. The TV shows "🎁 Just opened: Air fryer" with a sparkle sound and lights the word up on a board of all gifts. Guests mark their own cards exactly like number bingo. Gifts keep counting while a winner is on screen, because the unwrapping doesn't stop. Edit the word list (`GIFT_WORDS` in `src/lib/rounds.js`) to match what's likely on the gift table. Keep the words short and have at least 24.
+
 ## Sound effects
 
 Everything is synthesized in the browser (`src/lib/sounds.js`) — no audio files. The TV plays sounds automatically from game events: game switches (whoosh + title splash), buzzes, Feud reveals and strikes, Noot answers, lyric reveals, poll result drumrolls, score changes (with an animated count-up), the timer's last five seconds and a horn at zero, the bingo tumbler and ball drop, bingo wins and the winner screen's applause. The host's soundboard has extras (drumroll, applause, horn…). Phones play quiet tap sounds and vibrate (Android) for their own buzzes, votes and bingo marks; each device has a 🔊/🔇 toggle.
@@ -84,6 +88,12 @@ Everything is synthesized in the browser (`src/lib/sounds.js`) — no audio file
 Add `?rehearsal=1` to any game URL (e.g. `#/host?rehearsal=1`, `#/display?rehearsal=1`), or tap **🧪 Switch to rehearsal** under ⚙️ Setup on the host panel. Everything — scores, buzzers, roster, bingo — then runs against a separate `/game-test` copy, so the live game is never touched. An amber "REHEARSAL" strip shows on every screen, the QR code automatically points guests at the rehearsal, and the mode sticks for that browser tab until you switch back.
 
 > **One-time:** re-publish the rules from `docs/firebase-rules.json` in the Firebase console — they now include the `game-test` path. Without it rehearsal writes are refused.
+
+## Emoji reactions
+
+Phones have a row of emojis along the bottom (😂 ❤️ 🎉 👏 😱 🔥 💍 🥂). Each tap floats up the TV with the guest's name: Team A's from the left half, Team B's from the right. Taps are limited to one every 0.6s per phone, and the TV shows at most 50 at once. The host can switch reactions off (and back on) under **Emoji reactions**, e.g. during a serious moment.
+
+> **One-time:** reactions live at their own `reactions` path, so re-publish `docs/firebase-rules.json` in the Firebase console (it now includes `reactions` as well as `game-test`).
 
 ## Players & connection
 

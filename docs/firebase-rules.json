@@ -8,6 +8,10 @@
       ".read": true,
       ".write": true
     },
+    "reactions": {
+      ".read": true,
+      ".write": true
+    },
     "survey": {
       "config": {
         ".read": true,

@@ -1,6 +1,12 @@
+import { GIFT_WORDS } from './rounds'
+
 /**
  * Bridal Bingo — 75-ball bingo with the columns spelled B-R-I-D-E instead of
- * B-I-N-G-O. Every guest's card is generated deterministically from their
+ * B-I-N-G-O. A second mode, Gift Bingo, puts gift words on the cards instead
+ * (the classic kitchen-tea game): the host taps each gift as it's opened.
+ * In both modes a card cell / drawn entry is a number — a ball, or a
+ * 1-based index into GIFT_WORDS — so the same marking and win logic serves
+ * both. Every guest's card is generated deterministically from their
  * player id + the round's seed, so cards never need to be stored: the host
  * and TV can regenerate any card to check a claim, and "New game" (new seed)
  * deals everyone a fresh card.
@@ -37,9 +43,21 @@ const CALLS = {
   75: 'Strive and strive',
 }
 
+export const MODES = {
+  numbers: { id: 'numbers', label: '🎱 Numbers' },
+  gifts: { id: 'gifts', label: '🎁 Gifts' },
+}
+
+export const isGiftMode = (bingoState) => bingoState?.mode === 'gifts'
+export const giftWord = (n) => GIFT_WORDS[n - 1] || '?'
+export const GIFT_COUNT = GIFT_WORDS.length
+
 export const letterFor = (n) => BINGO_LETTERS[Math.min(Math.floor((n - 1) / 15), 4)]
 export const ballLabel = (n) => `${letterFor(n)}-${n}`
 export const callFor = (n) => CALLS[n] || ''
+
+/** What to call a cell / drawn entry in either mode. */
+export const cellLabel = (n, mode) => (mode === 'gifts' ? giftWord(n) : ballLabel(n))
 
 /* Tiny seeded PRNG (mulberry32) + string hash, so cards are reproducible. */
 function hash(str) {
@@ -66,8 +84,19 @@ function rng(seed) {
  * A 5x5 card as a flat array of 25 numbers, row-major. Column c holds 5
  * distinct numbers from c*15+1 … c*15+15; the centre is FREE.
  */
-export function makeCard(playerId, seed) {
+export function makeCard(playerId, seed, mode = 'numbers') {
   const rand = rng(hash(`${playerId}:${seed}`))
+  if (mode === 'gifts') {
+    // 24 distinct gift words in random order, free square in the middle.
+    const pool = Array.from({ length: GIFT_COUNT }, (_, i) => i + 1)
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1))
+      ;[pool[i], pool[j]] = [pool[j], pool[i]]
+    }
+    const card = pool.slice(0, 24)
+    card.splice(12, 0, FREE)
+    return card
+  }
   const cols = BINGO_LETTERS.map((_, c) => {
     const pool = Array.from({ length: 15 }, (_, i) => c * 15 + i + 1)
     for (let i = pool.length - 1; i > 0; i--) {

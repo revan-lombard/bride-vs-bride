@@ -9,6 +9,9 @@ import {
   ballLabel,
   callFor,
   makeCard,
+  isGiftMode,
+  giftWord,
+  GIFT_COUNT,
 } from '../lib/bingo'
 import { useBingoDraw } from '../hooks/useBingoDraw'
 import { playCue } from '../lib/sounds'
@@ -21,6 +24,14 @@ import Confetti from './Confetti'
  * celebration when a phone claims BINGO.
  */
 export default function BingoDisplay({ bingoState }) {
+  return isGiftMode(bingoState) ? (
+    <GiftBingoScreen bingoState={bingoState} />
+  ) : (
+    <NumberBingoScreen bingoState={bingoState} />
+  )
+}
+
+function NumberBingoScreen({ bingoState }) {
   const { seed, drawn = [], pattern = 'line', winner } = bingoState || {}
   const { spinning, visible, current } = useBingoDraw(bingoState)
   const wasSpinning = useRef(false)
@@ -81,6 +92,77 @@ export default function BingoDisplay({ bingoState }) {
       <CalledBoard called={called} latest={spinning ? null : current} />
 
       {winner && <WinnerOverlay winner={winner} seed={winner.seed || seed} />}
+    </div>
+  )
+}
+
+const GIFT_SHADES = Object.values(BALL_COLORS)
+
+/**
+ * Gift Bingo on the TV: the gift just opened, big, and every gift word on
+ * the board lighting up as the bride unwraps them.
+ */
+function GiftBingoScreen({ bingoState }) {
+  const { seed, drawn = [], pattern = 'line', winner } = bingoState || {}
+  const opened = new Set(drawn)
+  const current = drawn[drawn.length - 1]
+  const pat = PATTERNS[pattern] || PATTERNS.line
+  const count = useRef(drawn.length)
+
+  // Chime for each newly opened gift (not for undos or the state at load).
+  useEffect(() => {
+    if (drawn.length > count.current) playCue('gift')
+    count.current = drawn.length
+  }, [drawn.length])
+
+  return (
+    <div className="w-full h-full max-w-7xl flex flex-col gap-6">
+      <div className="flex items-center justify-between gap-8">
+        <div className="space-y-2">
+          <h2 className="text-5xl font-extrabold">🎁 Gift Bingo</h2>
+          <p className="text-2xl text-white/70">
+            Playing for <b className="text-white">{pat.label}</b> · {pat.points} pts
+          </p>
+          <p className="text-xl text-white/50">
+            Opened {drawn.length} / {GIFT_COUNT}
+          </p>
+        </div>
+        <div className="flex-1 h-56 flex items-center justify-center">
+          {!seed ? (
+            <p className="text-3xl text-white/60">Dealing the cards… 🃏</p>
+          ) : current ? (
+            <div key={current} className="flex items-center gap-6 animate-ball-pop">
+              <span className="text-9xl">🎁</span>
+              <div>
+                <p className="text-2xl uppercase tracking-widest text-white/60">Just opened</p>
+                <p className="text-7xl font-extrabold text-yellow-300">{giftWord(current)}</p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-3xl text-white/60">Mark the gifts on your phone as they're opened 📱</p>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-6 gap-2 content-start">
+        {Array.from({ length: GIFT_COUNT }, (_, i) => {
+          const n = i + 1
+          const on = opened.has(n)
+          return (
+            <span
+              key={n}
+              className={`rounded-lg px-2 py-2 text-center text-xl font-bold truncate transition-colors duration-500 ${
+                on ? 'text-stage' : 'bg-white/5 text-white/30'
+              } ${n === current ? 'animate-glow' : ''}`}
+              style={on ? { backgroundColor: GIFT_SHADES[i % 5] } : undefined}
+            >
+              {giftWord(n)}
+            </span>
+          )
+        })}
+      </div>
+
+      {winner && <WinnerOverlay winner={winner} seed={winner.seed || seed} mode="gifts" />}
     </div>
   )
 }
@@ -234,8 +316,10 @@ function Tumbler({ spinning, ballsLeft }) {
 
 /* ---------------- BINGO! ---------------- */
 
-function WinnerOverlay({ winner, seed }) {
-  const card = makeCard(winner.playerId, seed)
+function WinnerOverlay({ winner, seed, mode = 'numbers' }) {
+  const gifts = mode === 'gifts'
+  const card = makeCard(winner.playerId, seed, mode)
+  const cell = gifts ? 'w-28 h-20 text-base leading-tight px-1' : 'w-16 h-16 text-2xl'
   const winCells = new Set(winner.cells || [])
   const teamColor = winner.team === 'teamA' ? 'bg-bride-a-dark' : 'bg-bride-b-dark'
 
@@ -253,18 +337,18 @@ function WinnerOverlay({ winner, seed }) {
       <div className="bg-white/10 rounded-2xl p-4">
         <div className="grid grid-cols-5 gap-2">
           {BINGO_LETTERS.map((l) => (
-            <div key={l} className="w-16 text-center text-3xl font-extrabold" style={{ color: BALL_COLORS[l] }}>
+            <div key={l} className={`${gifts ? 'w-28' : 'w-16'} text-center text-3xl font-extrabold`} style={{ color: BALL_COLORS[l] }}>
               {l}
             </div>
           ))}
           {card.map((n, i) => (
             <div
               key={i}
-              className={`w-16 h-16 rounded-lg flex items-center justify-center text-2xl font-extrabold ${
+              className={`${cell} rounded-lg flex items-center justify-center text-center font-extrabold ${
                 winCells.has(i) ? 'bg-yellow-300 text-stage' : 'bg-white/10 text-white/60'
               }`}
             >
-              {n === FREE ? '💍' : n}
+              {n === FREE ? '💍' : gifts ? giftWord(n) : n}
             </div>
           ))}
         </div>

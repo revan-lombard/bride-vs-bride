@@ -14,7 +14,9 @@ import {
   BALL_COLORS,
   PATTERNS,
   FREE,
-  ballLabel,
+  cellLabel,
+  giftWord,
+  isGiftMode,
   makeCard,
   goodCells,
   winningCells,
@@ -25,6 +27,7 @@ import { useBingoDraw } from '../hooks/useBingoDraw'
 import { playCue, vibrate, isMuted, setMuted, unlockAudio } from '../lib/sounds'
 import BingoBall from '../components/BingoBall'
 import { ReconnectOverlay } from '../components/ConnectionStatus'
+import { ReactionBar } from '../components/Reactions'
 
 /** Buzz with feedback: a tap click, then a happy chirp + buzz if you won. */
 async function buzz(player) {
@@ -99,6 +102,7 @@ export default function GuestView({ state, connected }) {
           <VotePad player={player} pollState={state.pollState} />
         )}
       </main>
+      {state.reactionsOn !== false && <ReactionBar player={player} />}
     </div>
   )
 }
@@ -414,12 +418,14 @@ function MuteButton() {
 /**
  * Bridal Bingo card. Guests listen/watch for the balls and tap their own
  * squares — only numbers that have really been called will mark. When the
- * marked squares make the pattern, the BINGO button lights up.
+ * marked squares make the pattern, the BINGO button lights up. In Gift
+ * Bingo the squares are gift words, marked as the bride opens each gift.
  */
 function BingoPad({ player, bingoState }) {
-  const { seed = '', pattern = 'line', winner } = bingoState || {}
+  const { seed = '', pattern = 'line', winner, mode = 'numbers' } = bingoState || {}
+  const gifts = isGiftMode(bingoState)
   const { spinning, visible, current } = useBingoDraw(bingoState)
-  const card = useMemo(() => (seed ? makeCard(player.id, seed) : null), [player.id, seed])
+  const card = useMemo(() => (seed ? makeCard(player.id, seed, mode) : null), [player.id, seed, mode])
   const [store, setStore] = useState(() => ({ seed, marks: loadMarks(seed) }))
   const marks = store.seed === seed ? store.marks : loadMarks(seed)
   const [shake, setShake] = useState(null) // cell index that was tapped too early
@@ -433,7 +439,7 @@ function BingoPad({ player, bingoState }) {
   }, [toast])
 
   if (!card) {
-    return <Splash text="🎱 Bridal Bingo — the host is dealing the cards…" />
+    return <Splash text="🎱 Bingo — the host is dealing the cards…" />
   }
 
   const called = new Set(visible)
@@ -453,7 +459,7 @@ function BingoPad({ player, bingoState }) {
     } else if (!called.has(n)) {
       setShake(i)
       setTimeout(() => setShake(null), 400)
-      setToast(`${ballLabel(n)} hasn't been called yet!`)
+      setToast(`${cellLabel(n, mode)} ${gifts ? "hasn't been opened" : "hasn't been called"} yet!`)
       playCue('nope')
       vibrate(80)
       return
@@ -488,7 +494,16 @@ function BingoPad({ player, bingoState }) {
             {pat.label} · {pat.points} pts
           </div>
         </div>
-        {spinning ? (
+        {gifts ? (
+          current ? (
+            <div key={current} className="text-right animate-card-reveal">
+              <div className="text-xs text-white/60">🎁 Just opened</div>
+              <div className="font-extrabold text-yellow-300">{giftWord(current)}</div>
+            </div>
+          ) : (
+            <div className="text-sm text-white/60">Watch the gifts 🎁</div>
+          )
+        ) : spinning ? (
           <div className="text-lg font-bold animate-buzz-pulse">🌀 Drawing…</div>
         ) : current ? (
           <div className="flex items-center gap-2">
@@ -517,14 +532,16 @@ function BingoPad({ player, bingoState }) {
             <button
               key={i}
               onClick={() => tapCell(i)}
-              className={`aspect-square rounded-xl text-2xl font-extrabold flex items-center justify-center select-none transition active:scale-90 ${
+              className={`aspect-square rounded-xl font-extrabold flex items-center justify-center text-center select-none transition active:scale-90 ${
+                gifts && n !== FREE ? 'text-[11px] leading-tight px-0.5 break-words hyphens-auto' : 'text-2xl'
+              } ${
                 shake === i ? 'animate-shake' : ''
               } ${winCells.has(i) ? 'ring-4 ring-yellow-300' : ''} ${
                 marked ? 'text-stage' : 'bg-white/10'
               }`}
               style={marked ? { backgroundColor: n === FREE ? '#fde68a' : color } : undefined}
             >
-              {n === FREE ? '💍' : n}
+              {n === FREE ? '💍' : gifts ? giftWord(n) : n}
             </button>
           )
         })}
@@ -552,7 +569,7 @@ function BingoPad({ player, bingoState }) {
               : 'bg-white/10 text-white/30 text-lg'
           }`}
         >
-          {win ? 'BINGO! 🎉' : 'Tap numbers as they’re called'}
+          {win ? 'BINGO! 🎉' : gifts ? 'Tap gifts as they’re opened' : 'Tap numbers as they’re called'}
         </button>
       )}
     </div>

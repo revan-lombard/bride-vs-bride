@@ -100,6 +100,7 @@ export const DEFAULT_STATE = {
   // (playerId, seed) so nothing per-player is stored; marks live on phones.
   bingoState: {
     seed: '', // empty = no game dealt yet
+    mode: 'numbers', // 'numbers' (tumbler) | 'gifts' (gift words, host taps as opened)
     drawn: [], // ball numbers in draw order
     pattern: 'line', // key of PATTERNS in lib/bingo.js
     // First valid claim: { playerId, userName, team, pattern, cells, points }
@@ -107,6 +108,9 @@ export const DEFAULT_STATE = {
     // Earlier winners this game (line → two lines → full house…)
     winners: [],
   },
+  // Emoji reactions bar on phones (the reactions themselves live outside
+  // /game at /reactions/{root}/{playerId} so they don't resync everything).
+  reactionsOn: true,
   // Who has joined: { [playerId]: { userName, team, online, joinedAt, kicked? } }
   // Guests write their own entry (online flips false on disconnect); the
   // host can rename, move or remove (kicked) players from the roster.

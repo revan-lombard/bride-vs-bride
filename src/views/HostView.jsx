@@ -23,6 +23,7 @@ import {
   newBingoGame,
   setBingoPattern,
   drawBingoBall,
+  toggleGift,
   continueBingo,
   renamePlayer,
   movePlayer,
@@ -30,9 +31,10 @@ import {
   startTimer,
   clearTimer,
   triggerSound,
+  setReactionsOn,
   resetGame,
 } from '../lib/gameActions'
-import { PATTERNS, BINGO_MAX, ballLabel } from '../lib/bingo'
+import { PATTERNS, BINGO_MAX, MODES, GIFT_COUNT, ballLabel, giftWord, isGiftMode } from '../lib/bingo'
 import { useBingoDraw } from '../hooks/useBingoDraw'
 import { CUE_NAMES } from '../lib/sounds'
 import BingoBall from '../components/BingoBall'
@@ -157,6 +159,19 @@ export default function HostView({ state, connected }) {
             Clear
           </button>
         </div>
+      </Section>
+
+      <Section title="Emoji reactions">
+        <button
+          onClick={() => setReactionsOn(state.reactionsOn === false)}
+          className={`w-full rounded-lg py-3 text-sm font-bold ${
+            state.reactionsOn === false ? 'bg-white/15' : 'bg-green-700'
+          }`}
+        >
+          {state.reactionsOn === false
+            ? '😶 Off — tap to let guests send 😂❤️🎉 to the TV'
+            : '😂 On — guests’ emojis float up the TV (tap to turn off)'}
+        </button>
       </Section>
 
       <Section title="Sounds">
@@ -542,10 +557,12 @@ function NootControls({ nootState }) {
 
 function BingoControls({ bingoState }) {
   const { seed, drawn = [], pattern = 'line', winner, winners = [] } = bingoState || {}
+  const gifts = isGiftMode(bingoState)
   const { spinning } = useBingoDraw(bingoState)
   const [auto, setAuto] = useState(false)
+  const [dealMode, setDealMode] = useState(bingoState?.mode || 'numbers')
   const done = drawn.length >= BINGO_MAX
-  const autoOn = auto && Boolean(seed) && !winner && !done
+  const autoOn = auto && Boolean(seed) && !gifts && !winner && !done
 
   // Auto-draw: a new ball every 12s (spin + time to mark) until someone
   // claims. Runs on this device, so keep the host screen awake.
@@ -558,7 +575,7 @@ function BingoControls({ bingoState }) {
   const deal = () => {
     if (seed && drawn.length && !winner && !confirm('Deal new cards? Everyone gets a fresh card.')) return
     setAuto(false)
-    newBingoGame(pattern)
+    newBingoGame(pattern, dealMode)
   }
 
   const pastPatterns = new Set([...winners.map((w) => w?.pattern), winner?.pattern])
@@ -566,6 +583,18 @@ function BingoControls({ bingoState }) {
 
   return (
     <div className="space-y-3">
+      <div className="flex items-center gap-2 text-xs">
+        <span className="text-white/50">{seed ? 'Next deal:' : 'Play with:'}</span>
+        {Object.values(MODES).map((m) => (
+          <button
+            key={m.id}
+            onClick={() => setDealMode(m.id)}
+            className={`rounded-lg px-3 py-1.5 font-bold ${dealMode === m.id ? 'bg-white text-stage' : 'bg-white/15'}`}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
       <div className="grid grid-cols-4 gap-2">
         {Object.values(PATTERNS).map((p) => (
           <button
@@ -608,7 +637,7 @@ function BingoControls({ bingoState }) {
                 </div>
               )}
             </div>
-          ) : (
+          ) : gifts ? null : (
             <div className="flex gap-2">
               <button
                 onClick={drawBingoBall}
@@ -626,6 +655,9 @@ function BingoControls({ bingoState }) {
             </div>
           )}
 
+          {gifts ? (
+            <GiftPicker drawn={drawn} onDeal={deal} />
+          ) : (
           <div className="bg-white/10 rounded-lg p-3 space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span>
@@ -642,10 +674,11 @@ function BingoControls({ bingoState }) {
               ))}
             </div>
           </div>
+          )}
         </>
       )}
       <p className="text-xs text-white/40">
-        Guests tap the called numbers on their own card; the BINGO button only lights up for a real win,
+        Guests tap the called {gifts ? 'gifts' : 'numbers'} on their own card; the BINGO button only lights up for a real win,
         and the first claim scores automatically.
       </p>
     </div>
@@ -724,6 +757,45 @@ function Roster({ players }) {
         ))}
       </div>
     </details>
+  )
+}
+
+/**
+ * Gift Bingo: every gift word as a button — tap it as the bride opens that
+ * gift (tap again to undo). Opened ones stay lit; the latest is outlined.
+ */
+function GiftPicker({ drawn, onDeal }) {
+  const opened = new Set(drawn)
+  const last = drawn[drawn.length - 1]
+  return (
+    <div className="bg-white/10 rounded-lg p-3 space-y-2">
+      <div className="flex items-center justify-between text-sm">
+        <span>
+          🎁 Opened {drawn.length} / {GIFT_COUNT}
+          {last && ` · last: ${giftWord(last)}`}
+        </span>
+        <button onClick={onDeal} className="rounded bg-white/15 px-2 py-1 text-xs font-bold">
+          🃏 New cards
+        </button>
+      </div>
+      <div className="grid grid-cols-3 gap-1.5">
+        {Array.from({ length: GIFT_COUNT }, (_, i) => i + 1).map((n) => (
+          <button
+            key={n}
+            onClick={() => toggleGift(n)}
+            className={`rounded-lg px-1 py-2 text-xs font-bold leading-tight ${
+              opened.has(n) ? 'bg-green-700' : 'bg-white/10'
+            } ${n === last ? 'ring-2 ring-yellow-300' : ''}`}
+          >
+            {opened.has(n) && '✓ '}
+            {giftWord(n)}
+          </button>
+        ))}
+      </div>
+      <p className="text-xs text-white/40">
+        Gift not on the list? Nothing to tap — the words live in <code>GIFT_WORDS</code> in rounds.js.
+      </p>
+    </div>
   )
 }
 

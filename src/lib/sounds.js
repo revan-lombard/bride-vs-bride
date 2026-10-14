@@ -178,6 +178,11 @@ const CUES = {
     noise(0, 0.05, { gain: 0.25, freq: 2500, q: 3 })
     tone(1047, 0.2, 0.25, 'sine', 0.15)
   },
+  /** Gift Bingo: a gift was opened — paper rustle + sparkle */
+  gift: () => {
+    noise(0, 0.35, { gain: 0.12, freq: 3000, q: 0.7, attack: 0.05 })
+    arpeggio([1568, 1976, 2349, 3136], 0.06, 0.4, 'sine', 0.1, 0.2)
+  },
   /** Somebody got BINGO! */
   bingo: () => {
     tone(880, 0, 0.15, 'square', 0.12)
@@ -186,6 +191,9 @@ const CUES = {
     ;[784, 1047, 1319].forEach((f) => tone(f, 0.95, 1.2, 'triangle', 0.12))
     applause(0.9, 3)
   },
+
+  /** A guest's emoji floating up the TV — kept very quiet */
+  react: () => tone(700 + Math.random() * 500, 0, 0.12, 'sine', 0.05, 1600),
 
   // --- phone taps (quiet) --------------------------------------------------
   tap: () => tone(660, 0, 0.06, 'sine', 0.15),

@@ -89,6 +89,21 @@ export const movePlayer = (id, team) => set(game(`players/${id}/team`), team)
 /** Sends the guest back to the join screen (they can rejoin fresh). */
 export const removePlayer = (id) => update(game(`players/${id}`), { kicked: true, online: false })
 
+export const setReactionsOn = (on) => set(game('reactionsOn'), on)
+
+/**
+ * One slot per guest, overwritten each tap; the counter tells the TV it's a
+ * new reaction even when the same emoji is tapped twice. Kept outside /game
+ * so a flurry of taps doesn't resend the whole game state to every phone.
+ */
+export const sendReaction = (player, emoji) =>
+  update(ref(db, `reactions/${GAME_ROOT}/${player.id}`), {
+    emoji,
+    team: player.team,
+    userName: player.userName,
+    n: increment(1),
+  })
+
 export const startTimer = (seconds) =>
   set(game('timer'), { duration: seconds, endsAt: Date.now() + seconds * 1000 })
 
@@ -232,9 +247,10 @@ export function submitNootGuess(player, choice, nootState) {
 /* ------------------------------------------------------------------ */
 
 /** Deal everyone a fresh card (new seed) and empty the tumbler. */
-export const newBingoGame = (pattern = 'line') =>
+export const newBingoGame = (pattern = 'line', mode = 'numbers') =>
   set(game('bingoState'), {
     seed: Math.random().toString(36).slice(2, 10),
+    mode,
     drawn: [],
     pattern,
     winner: null,
@@ -255,6 +271,17 @@ export const drawBingoBall = () =>
     const n = nextBall(drawn)
     if (n === null) return undefined
     return { ...current, drawn: [...drawn, n] }
+  })
+
+/**
+ * Gift Bingo: the host taps a gift as it's opened (tap again to undo a
+ * mis-tap). Unlike the tumbler this keeps working while a win is on screen —
+ * the gifts don't stop coming.
+ */
+export const toggleGift = (n) =>
+  runTransaction(game('bingoState/drawn'), (current) => {
+    const drawn = current || []
+    return drawn.includes(n) ? drawn.filter((d) => d !== n) : [...drawn, n]
   })
 
 /**

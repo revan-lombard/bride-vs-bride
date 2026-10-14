@@ -117,3 +117,20 @@ body {
   100% { transform: scale(1.3); opacity: 0; }
 }
 .animate-splash { animation: splash 2.2s ease-in-out both; }
+
+/* Emoji reactions drifting up the TV */
+@keyframes react-float {
+  0%   { transform: translate(0, 0) scale(0.4); opacity: 0; }
+  10%  { transform: translate(0, -40px) scale(1.15); opacity: 1; }
+  35%  { transform: translate(18px, -25vh) scale(1); }
+  65%  { transform: translate(-18px, -50vh) scale(1); opacity: 0.9; }
+  100% { transform: translate(8px, -78vh) scale(0.9); opacity: 0; }
+}
+.animate-react-float { animation: react-float 4s ease-out both; }
+
+/* Phone reaction button tap */
+@keyframes react-tap {
+  0%, 100% { transform: scale(1); }
+  40%      { transform: scale(1.35) rotate(-8deg); }
+}
+.animate-react-tap { animation: react-tap 0.3s ease-out; }

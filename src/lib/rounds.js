@@ -223,3 +223,21 @@ export const NOOT_ROUNDS = [
     points: 10,
   },
 ]
+
+/**
+ * Gift Bingo words — each guest's card gets 24 of these at random, and the
+ * host taps each one as the bride opens it. Swap in whatever fits your gift
+ * table; keep them short (they have to fit a phone square) and have at
+ * least 24. The more words, the longer a game lasts.
+ */
+export const GIFT_WORDS = [
+  'Tea towels', 'Apron', 'Oven gloves', 'Wooden spoons', 'Whisk', 'Spatula',
+  'Mixing bowls', 'Measuring cups', 'Rolling pin', 'Grater', 'Colander',
+  'Cake tin', 'Baking tray', 'Frying pan', 'Pots', 'Potjie', 'Knife set',
+  'Cutting board', 'Cheese board', 'Braai tongs', 'Tupperware', 'Storage jars',
+  'Spice rack', 'Salt & pepper', 'Recipe book', 'Kettle', 'Toaster', 'Blender',
+  'Air fryer', 'Coffee machine', 'Teapot', 'Mugs', 'Wine glasses',
+  'Champagne flutes', 'Dinner set', 'Cutlery set', 'Serving platter',
+  'Salad bowl', 'Placemats', 'Ice trays', 'Candles', 'Wine', 'Gift voucher',
+  'Kitchen scale',
+]
