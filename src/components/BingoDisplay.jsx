@@ -62,7 +62,7 @@ function NumberBingoScreen({ bingoState }) {
             {!seed ? (
               <p className="text-3xl text-white/60">Dealing the cards… 🃏</p>
             ) : spinning ? (
-              <p className="text-5xl font-extrabold animate-buzz-pulse">Mixing… 🌀</p>
+              <p className="text-5xl font-extrabold animate-text-pulse">Mixing… 🌀</p>
             ) : current ? (
               <div key={current} className="animate-ball-pop">
                 <BingoBall number={current} size={260} />
@@ -327,7 +327,7 @@ function WinnerOverlay({ winner, seed, mode = 'numbers' }) {
     <div className={`absolute inset-0 ${teamColor} rounded-3xl flex items-center justify-center gap-16 animate-card-reveal z-10`}>
       <Confetti />
       <div className="text-center space-y-4">
-        <div className="text-9xl font-extrabold tracking-wider animate-buzz-pulse">BINGO!</div>
+        <div className="text-9xl font-extrabold tracking-wider animate-text-pulse">BINGO!</div>
         <div className="text-7xl font-extrabold">{winner.userName}</div>
         <div className="text-3xl text-white/80">{TEAMS[winner.team]?.label}</div>
         <div className="text-4xl font-bold text-yellow-300">

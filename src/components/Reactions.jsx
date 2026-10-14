@@ -24,12 +24,12 @@ export function ReactionBar({ player }) {
   }
 
   return (
-    <div className="flex justify-around gap-1 px-2 py-2 bg-black/20 border-t border-white/10">
+    <div className="flex px-1 py-2 bg-black/20 border-t border-white/10">
       {REACTION_EMOJIS.map((e) => (
         <button
           key={tapped?.emoji === e ? `${e}-${tapped.id}` : e}
           onClick={() => react(e)}
-          className={`text-3xl px-1 select-none ${tapped?.emoji === e ? 'animate-react-tap' : ''}`}
+          className={`flex-1 min-w-0 text-[clamp(1.25rem,7vw,1.875rem)] select-none ${tapped?.emoji === e ? 'animate-react-tap' : ''}`}
           aria-label={`React ${e}`}
         >
           {e}

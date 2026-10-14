@@ -18,7 +18,7 @@ export function ReconnectOverlay({ connected }) {
 
   return (
     <div className="fixed inset-0 z-40 bg-black/75 backdrop-blur-sm flex flex-col items-center justify-center gap-4 p-8 text-center">
-      <div className="text-6xl animate-buzz-pulse rounded-full">📶</div>
+      <div className="text-6xl animate-text-pulse rounded-full">📶</div>
       <h2 className="text-2xl font-bold">Reconnecting…</h2>
       {phase === 'stuck' ? (
         <>
@@ -48,7 +48,7 @@ export function OfflinePill({ connected, label = 'Offline' }) {
     )
   }
   return (
-    <div className="fixed bottom-4 left-4 z-50 rounded-full bg-red-600 px-4 py-2 font-bold animate-buzz-pulse">
+    <div className="fixed bottom-4 left-4 z-50 rounded-full bg-red-600 px-4 py-2 font-bold animate-text-pulse">
       ⚠️ {label} — reconnecting…
     </div>
   )

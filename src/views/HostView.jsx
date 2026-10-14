@@ -78,7 +78,7 @@ export default function HostView({ state, connected }) {
                 state.currentGame === g ? 'bg-white text-stage' : 'bg-white/15'
               }`}
             >
-              {g === 'WINNER' ? '🏆 WINNER' : g}
+              {GAME_BUTTONS[g] || g}
             </button>
           ))}
         </div>
@@ -249,6 +249,17 @@ export default function HostView({ state, connected }) {
   )
 }
 
+const GAME_BUTTONS = {
+  LOBBY: '🥂 Lobby',
+  FEUD: '📋 Feud',
+  POLL: '🗳️ Poll',
+  LYRIC: '🎵 Lyric',
+  NOOT: '🎶 Noot vir Noot',
+  BINGO: '🎱 Bingo',
+  NEWLYWED: '💑 Bride Knows Best',
+  WINNER: '🏆 Winner',
+}
+
 const SOUNDBOARD = [
   ['buzz', '🔔', 'buzz'],
   ['correct', '✅', 'ding'],
@@ -383,7 +394,10 @@ function FeudControls({ feudState }) {
       const [text, points] = line.split('|').map((s) => s.trim())
       return { text, points: Number(points) || 0 }
     })
-    loadFeudRound(q, parsed)
+    // "answer | 0" (or no points) = a decoy: on the phones, not on the board.
+    const board = parsed.filter((a) => a.points > 0)
+    const decoys = parsed.filter((a) => !(a.points > 0)).map((a) => a.text)
+    loadFeudRound(q, board, null, decoys)
   }
 
   return (
@@ -391,7 +405,7 @@ function FeudControls({ feudState }) {
       <ContentBank
         items={FEUD_ROUNDS}
         label={(r) => r.question}
-        onPick={(r) => loadFeudRound(r.question, r.answers)}
+        onPick={(r) => loadFeudRound(r.question, r.answers, null, r.decoys || [])}
       />
       <p className="text-xs text-white/40">
         Survey boards load from the <a href="#/survey-results" className="underline">survey results</a> page.
@@ -401,7 +415,7 @@ function FeudControls({ feudState }) {
         <textarea
           className="w-full rounded-lg bg-white/10 px-3 py-2 text-sm font-mono"
           rows={5}
-          placeholder={'Question on first line\nTop answer | 40\nSecond answer | 25'}
+          placeholder={'Question on first line\nTop answer | 40\nSecond answer | 25\nWrong answer (decoy) | 0'}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
         />
@@ -1013,18 +1027,31 @@ function ManualEntry({ children }) {
 /** Numbered one-tap load buttons for pre-written content from rounds.js. */
 function ContentBank({ items, label, onPick }) {
   if (!items.length) return null
+  // Entries still holding "PASTE:" placeholder text would put instructions
+  // on the TV — show them, but locked, until rounds.js is filled in.
+  const isPlaceholder = (item) => JSON.stringify(item).includes('PASTE')
   return (
     <div className="flex flex-wrap gap-2">
-      {items.map((item, i) => (
-        <button
-          key={i}
-          onClick={() => onPick(item)}
-          title={label(item)}
-          className="rounded-lg bg-white/15 px-3 py-2 text-xs font-bold max-w-full truncate"
-        >
-          {i + 1}. {label(item)}
-        </button>
-      ))}
+      {items.map((item, i) =>
+        isPlaceholder(item) ? (
+          <span
+            key={i}
+            title="Still a placeholder — fill this one in src/lib/rounds.js"
+            className="rounded-lg border border-dashed border-white/20 px-3 py-2 text-xs text-white/35 max-w-full truncate"
+          >
+            ✏️ {i + 1}. needs content
+          </span>
+        ) : (
+          <button
+            key={i}
+            onClick={() => onPick(item)}
+            title={label(item)}
+            className="rounded-lg bg-white/15 px-3 py-2 text-xs font-bold max-w-full truncate"
+          >
+            {i + 1}. {label(item)}
+          </button>
+        )
+      )}
     </div>
   )
 }

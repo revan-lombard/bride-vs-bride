@@ -74,7 +74,7 @@ export default function WinnerDisplay({ scores, players }) {
         </div>
       </div>
 
-      {stage === 1 && <p className="text-5xl font-extrabold animate-buzz-pulse">🥁 And your MVP is…</p>}
+      {stage === 1 && <p className="text-5xl font-extrabold animate-text-pulse">🥁 And your MVP is…</p>}
 
       {stage === 2 && mvp && (
         <div className="space-y-6">

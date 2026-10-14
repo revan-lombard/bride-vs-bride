@@ -45,7 +45,7 @@ export default function NewlywedDisplay({ nw }) {
             <TeamResults results={results} />
           </div>
         ) : (
-          <p className="text-3xl text-white/70 animate-buzz-pulse">
+          <p className="text-3xl text-white/70 animate-text-pulse">
             📱 Vote on your phone — {guessList.length} guesses in…
           </p>
         )}

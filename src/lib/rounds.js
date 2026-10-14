@@ -19,6 +19,9 @@ export const FEUD_ROUNDS = [
       { text: 'The aircon remote', points: 4 },
       { text: 'Who books the activities', points: 2 },
     ],
+    // Wrong answers mixed into the phone options — without these every
+    // pick is on the board and nobody can ever get a strike.
+    decoys: ['The minibar', 'Which side of the bed', 'The wedding photos'],
   },
   {
     question: 'Name something guests will sneak home from the wedding',
@@ -28,6 +31,7 @@ export const FEUD_ROUNDS = [
       { text: 'The flower arrangements', points: 3 },
       { text: 'An extra bottle of wine', points: 2 },
     ],
+    decoys: ['The guest book', 'A chair cover', 'The DJ'],
   },
 ]
 

@@ -94,7 +94,7 @@ function TimerBanner({ timer }) {
       {remaining > 0 ? (
         <span
           className={`text-6xl font-extrabold tabular-nums ${
-            remaining <= 5 ? 'text-red-400 animate-buzz-pulse inline-block' : ''
+            remaining <= 5 ? 'text-red-400 animate-text-pulse inline-block' : ''
           }`}
         >
           ⏱ {remaining}
@@ -229,7 +229,7 @@ function SoundToggle({ audioOn }) {
   const [muted, setMutedState] = useState(isMuted)
   if (!audioOn) {
     return (
-      <div className="fixed bottom-4 right-4 z-50 bg-yellow-400 text-stage font-bold rounded-full px-5 py-3 text-xl animate-buzz-pulse cursor-pointer">
+      <div className="fixed bottom-4 right-4 z-50 bg-yellow-400 text-stage font-bold rounded-full px-5 py-3 text-xl animate-text-pulse cursor-pointer">
         🔇 Click anywhere to turn on sound
       </div>
     )
@@ -431,7 +431,7 @@ function LyricScreen({ lyricState, audioFiles, onLoadFiles }) {
       ) : awaiting ? (
         <div className="space-y-6">
           <p className="text-5xl font-extrabold text-white/40 tracking-widest">{blanks}</p>
-          <p className="text-2xl text-white/50 animate-buzz-pulse">Buzz in when you know it!</p>
+          <p className="text-2xl text-white/50 animate-text-pulse">Buzz in when you know it!</p>
         </div>
       ) : (
         <p className="text-2xl text-white/50">🎶 Sing along…</p>
@@ -505,7 +505,7 @@ function NootScreen({ nootState, audioFiles, onLoadFiles }) {
     <div className="w-full max-w-5xl text-center space-y-8">
       <h2 className="text-3xl font-bold text-white/60">🎶 Noot vir Noot</h2>
       {playing ? (
-        <p className="text-5xl font-extrabold animate-buzz-pulse">🎵 Luister… 🎵</p>
+        <p className="text-5xl font-extrabold animate-text-pulse">🎵 Luister… 🎵</p>
       ) : (
         <p className="text-4xl font-extrabold">{prompt}</p>
       )}

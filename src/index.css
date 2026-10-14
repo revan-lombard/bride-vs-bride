@@ -23,9 +23,16 @@ body {
 /* Big pulsing buzzer animation */
 @keyframes buzz-pulse {
   0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgb(255 255 255 / 0.35); }
-  50%      { transform: scale(1.04); box-shadow: 0 0 0 24px rgb(255 255 255 / 0); }
+  50%      { transform: scale(1.04); box-shadow: 0 0 0 12px rgb(255 255 255 / 0); }
 }
 .animate-buzz-pulse { animation: buzz-pulse 1.4s ease-in-out infinite; }
+
+/* Same heartbeat for text and icons — no ring, which looked like a grey box */
+@keyframes text-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.05); opacity: 0.75; }
+}
+.animate-text-pulse { animation: text-pulse 1.4s ease-in-out infinite; }
 
 /* Feud card flip */
 @keyframes card-reveal {

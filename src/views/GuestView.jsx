@@ -84,7 +84,7 @@ export default function GuestView({ state, connected }) {
 
       <main className="flex-1 flex flex-col items-center justify-center p-6">
         {state.currentGame === GAMES.LOBBY && (
-          <Splash text="🥂 Waiting for the host to start a game…" />
+          <LobbyPad player={player} players={state.players} reactionsOn={state.reactionsOn !== false} />
         )}
         {state.currentGame === GAMES.FEUD && (
           <FeudPad
@@ -289,7 +289,7 @@ function FeudPad({ player, feudState, buzzerState }) {
       </div>
 
       {iWon ? (
-        <p className="text-center font-bold text-green-400 animate-buzz-pulse">
+        <p className="text-center font-bold text-green-400 animate-text-pulse">
           🎉 You buzzed first — pick your answer!
         </p>
       ) : firstBuzzed ? (
@@ -359,7 +359,7 @@ function NootPad({ player, nootState, buzzerState }) {
       {revealed ? (
         <p className="text-center text-white/60">🎉 Song revealed — next round soon!</p>
       ) : iWon ? (
-        <p className="text-center font-bold text-green-400 animate-buzz-pulse">
+        <p className="text-center font-bold text-green-400 animate-text-pulse">
           🎉 You buzzed first — which song is it?
         </p>
       ) : firstBuzzed ? (
@@ -413,6 +413,39 @@ function VotePad({ player, pollState }) {
       {myVote && isOpen && (
         <p className="text-white/60 text-sm">You can change your vote until it closes</p>
       )}
+    </div>
+  )
+}
+
+/** Waiting room: who's on your team, and a nudge to play with the emoji bar. */
+function LobbyPad({ player, players, reactionsOn }) {
+  const team = Object.values(players || {})
+    .filter((p) => p?.userName && !p.kicked && p.team === player.team)
+    .sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0))
+  const color = player.team === 'teamA' ? 'bg-bride-a-dark' : 'bg-bride-b-dark'
+  return (
+    <div className="w-full max-w-sm text-center space-y-5">
+      <div className="text-5xl">🥂</div>
+      <h2 className="text-2xl font-bold">You're in, {player.userName}!</h2>
+      <p className="text-white/70">
+        {TEAMS[player.team].label} · {team.length} player{team.length === 1 ? '' : 's'}
+      </p>
+      <div className="flex flex-wrap justify-center gap-2">
+        {team.map((p, i) => (
+          <span key={`${p.userName}-${i}`} className={`${color} rounded-full px-3 py-1 text-sm font-bold`}>
+            {p.userName}
+          </span>
+        ))}
+      </div>
+      <p className="text-white/60 text-sm">
+        The games start soon — keep this screen open.
+        {reactionsOn && (
+          <>
+            <br />
+            Warm up by cheering on the TV 👇
+          </>
+        )}
+      </p>
     </div>
   )
 }
@@ -523,7 +556,7 @@ function BingoPad({ player, bingoState }) {
             <div className="text-sm text-white/60">Watch the gifts 🎁</div>
           )
         ) : spinning ? (
-          <div className="text-lg font-bold animate-buzz-pulse">🌀 Drawing…</div>
+          <div className="text-lg font-bold animate-text-pulse">🌀 Drawing…</div>
         ) : current ? (
           <div className="flex items-center gap-2">
             <span className="text-xs text-white/60 text-right leading-tight">

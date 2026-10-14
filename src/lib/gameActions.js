@@ -70,11 +70,15 @@ export const showPollResults = (show = true) =>
 
 const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5)
 
-export const loadFeudRound = (question, answers, options = null) =>
+/**
+ * Phone options = board answers + decoys (shuffled). Decoys are what make a
+ * strike possible — with only board answers on offer, every pick is a hit.
+ */
+export const loadFeudRound = (question, answers, options = null, decoys = []) =>
   set(game('feudState'), {
     question,
     answers: answers.map((a) => ({ ...a, revealed: false })),
-    options: options || shuffle(answers.map((a) => a.text)),
+    options: options || shuffle([...answers.map((a) => a.text), ...decoys]),
     strikes: 0,
   })
 
